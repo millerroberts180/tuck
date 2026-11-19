@@ -71,9 +71,10 @@ tucking windows, and file access, for what you drop.
 ## Build from source
 
 ```sh
-scripts/build-app.sh    # builds build/Tuck.app
+scripts/signing-identity.sh   # once per Mac, so the Accessibility grant survives rebuilds
+scripts/build-app.sh          # builds build/Tuck.app
 open build/Tuck.app
-scripts/test.sh         # runs the tests
+scripts/test.sh               # runs the tests
 ```
 
 Debug flags and off-screen snapshots are in [docs/development.md](docs/development.md).

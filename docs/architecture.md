@@ -50,6 +50,7 @@ Sources/
                        width and card size on a display), PanelListLayout, SurfaceDisplays,
                        NotchlessStyle
     Shortcuts/         KeyShortcut, ShortcutAction, ShortcutSet (validation, clashes, storage)
+    Settings/          SettingsMigration (carries settings over from the old bundle ID)
     Setup/             TourDesk (the pretend screen's state, shared by the tour and the gesture
                        step), TourLayout (its geometry, for the real drop and flight logic)
     Services/          Service protocols and their TuckCore stand-ins, HapticEvent, HapticPacing
@@ -95,7 +96,8 @@ Support/AppIcon.icns   App icon, built from design/logo by design/logo/render.sw
 VERSION                The version every build carries
 design/logo/           Logo masters, generator and renderer, web icons and colour tokens
 docs/legal/            Draft EULA (shipped in the DMG) and privacy policy
-scripts/               build-app.sh, release.sh (signed, notarized DMG; docs/release.md), test.sh
+scripts/               build-app.sh, release.sh (signed, notarized DMG; docs/release.md), test.sh,
+                       signing-identity.sh (the local signing identity, once per Mac)
 ```
 
 ## Runtime structure
@@ -970,11 +972,12 @@ else it would close.
   logged with `os.Logger` (category `parking`), with the reason, the app's bundle ID and how lately
   Mission Control ended: brought back, refused, closed while tucked, and restored because the person
   went to its app or chose it in Mission Control. The log subsystem follows Tuck's bundle ID
-  (`Bundle.main.bundleIdentifier`, set in `Support/release.env`; `app.tuck.prototype` until the final
-  one is chosen, and "Tuck" under `swift run`, which has no bundle). Those are `.info`; Mission Control
-  starting and ending, re-parks and minimising instead are `.debug`. Neither level is kept on disk by
-  default, so stream it while reproducing, with the bundle ID in use:
-  `log stream --level debug --predicate 'subsystem == "app.tuck.prototype" AND category == "parking"'`.
+  (`Bundle.main.bundleIdentifier`, set in `Support/release.env`: `com.millerroberts.Tuck`, and "Tuck"
+  under `swift run`, which has no bundle). Those are `.info`; Mission Control starting and ending,
+  re-parks and minimising instead are `.debug`. Neither level is kept on disk by default, so stream it
+  while reproducing, with the bundle ID in use:
+  `log stream --level debug --predicate 'subsystem == "com.millerroberts.Tuck" AND category == "parking"'`.
+  A build from before the ID changed (2026-11-19) logs under `app.tuck.prototype` instead.
 - **Displays changing:** on a screen-parameters change, parked windows are checked at once and once
   more a second later, and any in view or with nothing left on any display is moved again, or minimised.
 - **Quit and relaunch:** `applicationWillTerminate` minimises off-screen rows through `keepTucked` (the
@@ -1176,6 +1179,18 @@ different build is refused the delete without anyone being asked (`errSecInvalid
 stays and is tried again at the next launch. Uninstall's removing the settings removes the first two
 as well.
 
+### Settings from the old bundle ID
+
+Settings live in macOS's preferences under the bundle ID, which was `app.tuck.prototype` until it
+became `com.millerroberts.Tuck`. The first thing `TuckMain` does, before anything reads or writes a
+setting, is `SettingsMigration.carryOver(to: Bundle.main.bundleIdentifier)`: when the running ID isn't
+the old one, its own domain has nothing saved yet (`persistentDomain(forName:)` is nil or empty) and
+the old domain has keys, those keys are copied into the new domain. Once copied, the new domain has
+keys, so it never runs again. It never deletes the old domain, and does nothing under `swift run`,
+which has no bundle ID. Tuck has no sandbox (no entitlements file), so it can read another domain.
+Accessibility and Open at Login can't come across this way: macOS keys them to the app's identity, so
+they are set again after the change. Uninstall removes only the current domain.
+
 ### Accessibility withdrawn
 
 The accessibility observer (a distributed notification, no polling) calls
@@ -1210,8 +1225,9 @@ by hand. So a debug build pointed at some other folder with `-TuckSupportDirecto
 
 ### Move to Applications
 
-At launch, before anything else, `MoveToApplications` looks at where the bundle is. On a read-only
-volume under `/Volumes` (its disk image) or under App Translocation, it offers once to move. A Tuck
+At launch, before anything else but the settings carry-over (above), `MoveToApplications` looks at
+where the bundle is. On a read-only volume under `/Volumes` (its disk image) or under App
+Translocation, it offers once to move. A Tuck
 already in Applications counts only with the same, non-nil bundle ID; then the offer becomes Replace,
 naming both versions (and both builds when the versions match) and saying when the one there is newer.
 Another app of the same name is never replaced. The copy is made in /Applications under a hidden name
@@ -1331,5 +1347,6 @@ The current figures were measured before the fold replaced the panel and have no
 since.
 
 Release builds use `-Osize`; `scripts/build-app.sh` strips local, debug and Swift symbols
-(`strip -rSTx`) before ad-hoc signing for local runs. Given a dSYM path (as `scripts/release.sh` gives
+(`strip -rSTx`) before signing for local runs, with "Tuck Local Signing" when
+`scripts/signing-identity.sh` has made it, else ad hoc. Given a dSYM path (as `scripts/release.sh` gives
 it), it runs `dsymutil` first, so the symbols survive outside the bundle.

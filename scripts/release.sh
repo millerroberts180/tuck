@@ -11,8 +11,9 @@ usage() {
   cat <<'EOF'
 Usage: scripts/release.sh [--unsigned] [version]
   version     The version people see, such as 1.0.1. Defaults to the VERSION file.
-  --unsigned  A DMG signed ad hoc and not notarized, which needs no Apple account. The Line Apps site
-              and the Homebrew tap ship it until a signed release exists.
+  --unsigned  A DMG not notarized, which needs no Apple account: the app is signed with "Tuck Local
+              Signing" when this Mac has it (scripts/signing-identity.sh), else ad hoc. The Line Apps
+              site and the Homebrew tap ship it until a signed release exists.
 A signed release needs DEVELOPER_ID and NOTARY_PROFILE set in the environment; see docs/release.md.
 EOF
 }
@@ -47,13 +48,17 @@ if [[ ! "$BUNDLE_ID" =~ ^[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$ ]]; then
 fi
 
 # What would ship unfinished: a bundle ID that still says "prototype" in any case, and About's links
-# leading to placeholders. A test DMG may have them; a signed release may not.
+# leading to placeholders. A test DMG may have them; a signed release may not. The website, privacy
+# policy and EULA are each needed; support may be by email or by a page, and either one will do.
 prototype_id=false
 if [[ "$(tr '[:upper:]' '[:lower:]' <<<"$BUNDLE_ID")" == *prototype* ]]; then prototype_id=true; fi
-unset_links=()
-for variable in WEBSITE_URL SUPPORT_EMAIL PRIVACY_POLICY_URL EULA_URL; do
-  [[ -n "${!variable:-}" ]] || unset_links+=("$variable")
+unset_links=""
+for variable in WEBSITE_URL PRIVACY_POLICY_URL EULA_URL; do
+  [[ -n "${!variable:-}" ]] || unset_links+="${unset_links:+, }$variable"
 done
+if [[ -z "${SUPPORT_EMAIL:-}" && -z "${SUPPORT_URL:-}" ]]; then
+  unset_links+="${unset_links:+, }SUPPORT_EMAIL or SUPPORT_URL (one will do)"
+fi
 
 # Everything a signed release needs from outside the repository is checked before anything is built,
 # so a missing piece fails at once rather than minutes in.
@@ -66,8 +71,8 @@ if ! $unsigned; then
     if $prototype_id; then
       problems+=("BUNDLE_ID in Support/release.env is still $BUNDLE_ID; set the final one too.")
     fi
-    if (( ${#unset_links[@]} )); then
-      problems+=("${unset_links[*]} in Support/release.env are still empty; set them too.")
+    if [[ -n "$unset_links" ]]; then
+      problems+=("Still empty in Support/release.env: $unset_links. Set them too.")
     fi
     {
       echo "error: a signed release needs a Developer ID certificate and notarization credentials."
@@ -95,9 +100,9 @@ EOF
       "signed release; docs/release.md says what changing it means for anyone already using Tuck." >&2
     exit 1
   fi
-  if (( ${#unset_links[@]} )); then
-    echo "error: ${unset_links[*]} in Support/release.env are still empty, so About's links would lead" \
-      "to placeholders. Set them before a signed release." >&2
+  if [[ -n "$unset_links" ]]; then
+    echo "error: still empty in Support/release.env: $unset_links. About's links would lead to" \
+      "placeholders; set them before a signed release." >&2
     exit 1
   fi
   identities="$(security find-identity -v -p codesigning 2>/dev/null || true)"
@@ -165,8 +170,21 @@ plutil -replace NSHumanReadableCopyright -string "$COPYRIGHT" "$plist"
 # and file access are permissions people grant (TCC), not entitlements. So the hardened runtime needs no
 # exception (docs/release.md). Stamping changed Info.plist, so the bundle is signed again either way.
 if $unsigned; then
-  # Ad hoc, but under the hardened runtime as well, so a test build runs as a signed one will.
-  codesign --force --options runtime --sign - "$app"
+  # Without a Developer ID, "Tuck Local Signing" (scripts/signing-identity.sh) when this Mac has it:
+  # macOS ties the Accessibility grant to the signature, and this one stays the same between builds, so
+  # people who download each new test DMG keep their grant. Else ad hoc, which changes every build.
+  # Either way under the hardened runtime, so a test build runs as a signed one will.
+  local_name="Tuck Local Signing"
+  local_keychain="$HOME/Library/Keychains/tuck-signing.keychain-db"
+  if [[ -f "$local_keychain" ]] && security find-certificate -c "$local_name" "$local_keychain" >/dev/null 2>&1; then
+    security unlock-keychain -p tuck-local-signing "$local_keychain"
+    codesign --force --options runtime --keychain "$local_keychain" --sign "$local_name" "$app"
+    signed_as="with $local_name"
+  else
+    codesign --force --options runtime --sign - "$app"
+    signed_as="ad hoc"
+  fi
+  echo "Signed the app $signed_as, under the hardened runtime."
 else
   codesign --force --options runtime --timestamp --sign "$DEVELOPER_ID" "$app"
 fi
@@ -257,8 +275,8 @@ ditto -c -k --keepParent "$dsym" "$symbols"
 echo
 echo "Tuck $version (build $build_number), $BUNDLE_ID"
 if $unsigned; then
-  echo "Signed ad hoc and not notarized: Gatekeeper stops it until it is allowed with Open Anyway."
-  if (( ${#unset_links[@]} )); then
+  echo "Signed $signed_as and not notarized: Gatekeeper stops it until it is allowed with Open Anyway."
+  if [[ -n "$unset_links" ]]; then
     echo "It has placeholder links, as a signed release may not."
   fi
 else

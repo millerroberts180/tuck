@@ -560,8 +560,9 @@ follow them if they move. In setup, choose **Allow Full Disk Access** for access
 location without later file-access prompts. macOS requires you to enable this yourself in System
 Settings → Privacy & Security → Full Disk Access; Tuck cannot request it. Alternatively, **Just the
 Usual Folders** asks now for Desktop, Documents, Downloads and iCloud Drive. It does not authorize
-other locations, such as external or network drives, which macOS may ask about when first used. Local
-builds are ad-hoc signed, so each rebuild may need to be re-added in the Accessibility list.
+other locations, such as external or network drives, which macOS may ask about when first used. A local
+build keeps its place in the Accessibility list across rebuilds once `scripts/signing-identity.sh` has
+made its signing identity; signed ad hoc, each rebuild may need to be re-added.
 
 Clipboard history reads what other apps copy. From macOS 15.4 the system can ask, or refuse, before an
 app does that. Tuck reads only after a copy, and if Paste from Other Apps (Privacy & Security) is set to

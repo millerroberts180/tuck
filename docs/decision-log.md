@@ -10,6 +10,72 @@ it the test Mac. An **Inspiration** note names an app whose behaviour gave Tuck 
 inspiration only: no code, assets or drawings were taken from any of these apps, and Tuck's version is
 written for Tuck.
 
+## 2026-11-19: Tuck's own bundle ID, real links in About, and a signature that stays the same
+
+- **Decision:**
+  - **The bundle ID is `com.millerroberts.Tuck`,** beside `com.millerroberts.Glow`,
+    `com.millerroberts.Pulse`, `com.millerroberts.hum` and `com.millerroberts.lineapps`, in
+    `Support/release.env` and `Support/Info.plist`. It was `app.tuck.prototype`.
+  - **Settings carry over.** At the first launch under the new ID, before anything reads or writes a
+    setting, `SettingsMigration` (in TuckCore, called first in `TuckMain`) copies every key saved under
+    `app.tuck.prototype` into the new domain, when the new one has none yet and the old one has some. It
+    never deletes the old domain, and does nothing under `swift run`, which has no bundle ID. Tuck has
+    no sandbox and no entitlements file, so it can read the old domain.
+  - **Accessibility and Open at login have to be set again** after the change, by everyone already
+    running Tuck: macOS keys both to the app's identity, and copying settings can't bring them across.
+    Full Disk Access and folder access are asked for again too. The library carries over, since its
+    folder is named after the app.
+  - **About's links lead somewhere real.** The privacy policy and the EULA are the files in
+    `docs/legal/` on GitHub, and support is Tuck's GitHub issues. No support email is published. The
+    Support link shows the email when one is set, otherwise the support page's host (`github.com`), as
+    the Website row shows its host, and only then the placeholder address. The source plist no longer
+    holds `support@tuck.example`, so a build has no `tuck.example` left once the other links are set.
+  - **`scripts/release.sh`** needs `WEBSITE_URL`, `PRIVACY_POLICY_URL`, `EULA_URL`, and `SUPPORT_EMAIL`
+    or `SUPPORT_URL` for a signed release, where it needed the email before.
+  - **One signature across updates, until there is a Developer ID.** `scripts/signing-identity.sh`
+    creates "Tuck Local Signing", a self-signed identity in its own keychain
+    (`~/Library/Keychains/tuck-signing.keychain-db`), as Glow's and Pulse's scripts do for theirs.
+    `scripts/build-app.sh` signs with it when it exists, else ad hoc with a hint to make it.
+    `scripts/release.sh --unsigned` signs the app with it under the hardened runtime, else ad hoc, and
+    says which. The Developer ID path is unchanged. The identity's private key has to be backed up: a
+    new certificate is a new signature, and everyone would grant Accessibility once more.
+  - **The docs** (README, development, release, architecture and one line of the guide) say so, and the
+    `log stream` predicates name the new subsystem.
+- **Why:** I wanted Tuck's ID on my own domain, beside the other Line Apps'. Changing it used to drop
+  everyone's settings; copying them keeps everything but what macOS ties to the app's identity. About's
+  Support, privacy policy and EULA links still led to tuck.example. And every update of the ad-hoc DMG
+  lost the Accessibility grant, which one stable certificate keeps, as it already does for Glow's and
+  Pulse's builds.
+- **Checked:**
+  - `scripts/test.sh`: 408 tests in 48 suites pass, with the new suite "Settings carried over from the
+    old bundle ID" (4 tests). It copies every key when the new domain is empty and leaves the old one as
+    it was; it leaves a new domain that already has keys; it does nothing when the old domain is
+    missing, or without a bundle ID, or under the old ID. The tests use throwaway domains and remove
+    them, their files included.
+  - `swift build` shows no warnings. `scripts/build-app.sh` builds `build/Tuck.app` with
+    `Identifier=com.millerroberts.Tuck`, `Authority=Tuck Local Signing` and the three links stamped.
+  - `scripts/signing-identity.sh`, run on this Mac, says the identity already exists, and leaves the
+    keychain search list as it was.
+  - `scripts/release.sh --unsigned` built the test DMG and said it signed with Tuck Local Signing. In
+    the DMG, mounted read-only: `Identifier=com.millerroberts.Tuck`, `Authority=Tuck Local Signing` and
+    `flags=0x10000(runtime)`. The designated requirement is `identifier "com.millerroberts.Tuck" and
+    certificate leaf = H"d555d322…"`, the certificate's SHA-1, the same as the local build's.
+    `codesign --verify --deep --strict` passes, and Info.plist has the three new links and no
+    `tuck.example`.
+  - `scripts/release.sh` in a scratch copy: with no credentials it lists only those. With `EULA_URL` and
+    both support links emptied, it names `EULA_URL, SUPPORT_EMAIL or SUPPORT_URL (one will do)`, and
+    refuses with dummy credentials. With only `SUPPORT_EMAIL` set, it goes on to the certificate check.
+- **Not checked:** the built app wasn't launched, so the carry-over hasn't run in it; the tests drive
+  the same code against real preferences domains. No one has yet updated from one DMG signed with this
+  identity to the next, so the grant carrying over is the pattern Glow's and Pulse's builds rely on,
+  not something seen with Tuck.
+- **Deferred:**
+  - **The Homebrew cask** still names `app.tuck.prototype` in `uninstall quit:` and `zap`. It changes
+    in the tap, with the next DMG.
+  - **Uninstall** removes the current ID's settings only. On a Mac that ran a build with the old ID,
+    that domain stays, since the carry-over never deletes it.
+  - **The legal drafts** still have their `[Support email]` and `[privacy policy URL]` placeholders.
+
 ## 2026-11-19: Local builds report 1.0.0, and the samples look made up
 
 - **Decision:**
@@ -38,6 +104,10 @@ written for Tuck.
 
 ## 2026-11-19: The repository is ready to publish
 
+**Superseded in part** by "2026-11-19: Tuck's own bundle ID, real links in About, and a signature that
+stays the same": the privacy policy, EULA and support links are set, and support is by GitHub issues,
+not email.
+
 - **Decision:**
   - **The tagline** is "Clear the desk. Keep your place." in the README and on the logo board, which
     is rendered again. The board, `generate.py`, the logo README and `tokens.css` describe Tuck Blue as
@@ -58,6 +128,11 @@ written for Tuck.
   the memory and CPU figures in the README weren't measured again.
 
 ## 2026-11-19: Tuck installs with Homebrew, from the Line Apps tap
+
+**Superseded in part** by "2026-11-19: Tuck's own bundle ID, real links in About, and a signature that
+stays the same": the bundle ID is `com.millerroberts.Tuck`, About's links are set, and the test DMG is
+signed with "Tuck Local Signing" rather than ad hoc. The cask's `uninstall quit:` and `zap` still name
+`app.tuck.prototype` until the tap is updated.
 
 - **Decision:** `brew install --cask millerroberts180/line-apps/tuck`, from a new public tap,
   [millerroberts180/homebrew-line-apps](https://github.com/millerroberts180/homebrew-line-apps), one
@@ -1616,6 +1691,9 @@ trial and the licence keys are gone, and every feature works for everyone. Unins
 
 - **Superseded in part:** licensing is no longer deferred, and `release.sh` also writes the zipped
   dSYM to `dist/`. See "Sellable: a seven-day trial, offline licence keys, and Uninstall" above.
+- **Superseded in part:** the bundle ID is chosen, `com.millerroberts.Tuck`, and the test DMG is signed
+  with "Tuck Local Signing" when the Mac building it has that identity. See "2026-11-19: Tuck's own
+  bundle ID, real links in About, and a signature that stays the same" above.
 
 - **Decision:** `scripts/release.sh` builds what is sold, and `docs/release.md` says how to use it.
   - **The steps:** an arm64 release build, assembled by `scripts/build-app.sh` in a temporary folder.
@@ -1773,8 +1851,11 @@ trial and the licence keys are gone, and every feature works for everyone. Unins
 ## 2026-11-05: Leaving Mission Control never untucks a window
 
 - **Superseded in part:** the `parking` log's subsystem is now the bundle ID, set in
-  `Support/release.env` (still `app.tuck.prototype`). See "Packaged for direct sale, as a signed and
-  notarized DMG" above.
+  `Support/release.env`: `com.millerroberts.Tuck` since "2026-11-19: Tuck's own bundle ID, real links
+  in About, and a signature that stays the same". The `log stream` command below names
+  `app.tuck.prototype`, so it finds only builds from before then; for a current build, use
+  `subsystem == "com.millerroberts.Tuck"` (architecture.md, Diagnostics). See also "Packaged for direct
+  sale, as a signed and notarized DMG" above.
 
 - **Decision:** Leaving Mission Control (or App Exposé, or Show Desktop) brings a tucked window back
   only if you chose that window there. Leaving it any other way (clicking the window that was already
@@ -1837,6 +1918,8 @@ trial and the licence keys are gone, and every feature works for everyone. Unins
     because you went to its app or chose it in Mission Control (`.info`). Mission Control's start and
     end, re-parks and minimising instead are `.debug`. To watch while reproducing:
     `log stream --level debug --predicate 'subsystem == "app.tuck.prototype" AND category == "parking"'`.
+    (The subsystem has since changed: for a build since 2026-11-19, put `com.millerroberts.Tuck` in
+    place of `app.tuck.prototype`. See the note at the top of this entry.)
 - **Checked:** `swift build` (no warnings) and `scripts/test.sh`: 282 tests in 37 suites, up from 268.
   The new suite "Leaving Mission Control" (12 tests) covers:
   - leaving with the front where it was choosing nothing;

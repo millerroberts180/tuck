@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>Tuck</string>
 	<key>CFBundleIdentifier</key>
-	<string>app.tuck.prototype</string>
+	<string>com.millerroberts.Tuck</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -57,7 +57,7 @@
 	<key>TuckPrivacyPolicyURL</key>
 	<string>https://tuck.example/privacy</string>
 	<key>TuckSupportEmail</key>
-	<string>support@tuck.example</string>
+	<string></string>
 	<key>TuckSupportURL</key>
 	<string></string>
 	<key>TuckWebsiteURL</key>

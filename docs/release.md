@@ -20,16 +20,23 @@ connects to anything.
 | Everything else in the bundle's Info.plist | `Support/Info.plist` |
 | The licence shipped in the DMG | `docs/legal/EULA.txt` |
 | Signing certificate and notarization credentials | `DEVELOPER_ID` and `NOTARY_PROFILE` in the environment, never in the repository |
+| Local signing identity, for local builds and the test DMG | "Tuck Local Signing", made once per Mac by `scripts/signing-identity.sh` in its own keychain, never in the repository (see "The local signing identity") |
 
 Both scripts stamp the bundle ID, copyright and links from `Support/release.env` on the bundle's copy
-of Info.plist, so local builds (`scripts/build-app.sh`) and releases carry the same identity. A link
-left empty there keeps the source plist's placeholder on `tuck.example`, so a test build still points
-somewhere; About reads them from the bundle, and Tuck opens one only when someone clicks it.
-`scripts/release.sh` refuses a signed release while any link but `SUPPORT_URL` (an optional
-help page) is empty. Both stamp the version from `VERSION` as well, so a local build reports the
-version it was built at; a release's argument, when given, takes its place. The source plist keeps the
-same values only so it is complete on its own, and its build number, 1, is a placeholder that only a
-release replaces. The log subsystem of Tuck's `os.Logger` is the bundle ID too.
+of Info.plist, so local builds (`scripts/build-app.sh`) and releases carry the same identity. Both
+stamp the version from `VERSION` as well, so a local build reports the version it was built at; a
+release's argument, when given, takes its place. The source plist keeps the same values only so it is
+complete on its own, and its build number, 1, is a placeholder that only a release replaces. The log
+subsystem of Tuck's `os.Logger` is the bundle ID too.
+
+**About's links** go to Tuck's page on the Line Apps site, to the privacy policy and the EULA in
+`docs/legal/` on GitHub, and for support to Tuck's GitHub issues (`SUPPORT_URL`). No support email is
+published. The Support link shows the email when `SUPPORT_EMAIL` is set, otherwise the support page's
+host (`github.com`), and a placeholder address only when neither is set. A website, privacy policy or
+EULA link left empty keeps the source plist's placeholder on `tuck.example`, so a test build still
+points somewhere. About reads them all from the bundle, and Tuck opens one only when someone clicks it.
+`scripts/release.sh` refuses a signed release while the website, privacy policy or EULA link is empty,
+or while both `SUPPORT_EMAIL` and `SUPPORT_URL` are: either one will do for support.
 
 **The build number** is the UTC date, the UTC time and the git commit count, such as
 `20261106.30123.53` (2026-11-06 at 03:01:23 UTC, 53 commits). It starts with the date and time so it
@@ -84,9 +91,9 @@ The Command Line Tools include `notarytool` and `stapler`; Xcode isn't needed fo
 
 ## Cutting a release
 
-1. Before the first release, settle the launch checklist below, above all the final bundle ID in
-   `Support/release.env`. The script refuses a signed build while the bundle ID contains "prototype"
-   (in any case), or while a link in `Support/release.env` is still empty.
+1. Before the first signed release, settle the launch checklist below. The script refuses a signed
+   build while the bundle ID contains "prototype" (in any case), or while a link it needs in
+   `Support/release.env` is still empty (see above).
 2. Set the version in `VERSION` (three numbers, such as `1.0.1`), or pass it as the argument.
 3. Commit everything. The script warns if the tree has uncommitted changes, since the release then
    matches no commit.
@@ -139,12 +146,43 @@ What the script does, in order:
 scripts/release.sh --unsigned
 ```
 
-This makes `dist/Tuck-<version>-unsigned.dmg` without any Apple account. The app is signed ad hoc, but
-under the hardened runtime, so it runs as a signed build will. Nothing is notarized, so the Gatekeeper
-checks are skipped, and Gatekeeper refuses the DMG once it has been downloaded. To try it on a test
-Mac, open it from System Settings › Privacy & Security › Open Anyway, or copy it over without a
+This makes `dist/Tuck-<version>-unsigned.dmg` without any Apple account. The app is signed with "Tuck
+Local Signing" when this Mac has it (below), else ad hoc, and the script says which. Either way it is
+signed under the hardened runtime, so it runs as a signed build will. Nothing is notarized, so the
+Gatekeeper checks are skipped, and Gatekeeper refuses the DMG once it has been downloaded. To try it on
+a test Mac, open it from System Settings › Privacy & Security › Open Anyway, or copy it over without a
 download. Until the account exists, this is also what the Line Apps site and the Homebrew tap ship
 (below), with that step spelled out; once a signed release exists, they ship that instead.
+
+### The local signing identity
+
+macOS ties the Accessibility grant to the app's signature. An ad-hoc signature changes with every
+build, so anyone who updates to a new ad-hoc DMG has to allow Tuck in Accessibility again, and so does
+every local rebuild. "Tuck Local Signing" is a self-signed certificate that stays the same between
+builds. Its designated requirement names the certificate (`certificate leaf = H"…"`), so each build
+it signs is the same app to macOS, and the grant carries over. Make it once per Mac:
+
+```sh
+scripts/signing-identity.sh
+```
+
+It creates the identity in its own keychain, `~/Library/Keychains/tuck-signing.keychain-db`, with
+the password `tuck-local-signing`, and adds that keychain to the search list so `codesign` finds the
+key. The password is not a secret: the certificate is trusted by nothing and signs nothing anyone else
+would accept, and the password only lets the scripts use the key without a prompt. Run again, the
+script only says the identity already exists. `scripts/build-app.sh` signs with it whenever it exists,
+and `scripts/release.sh --unsigned` does too, under the hardened runtime. Without it, both sign ad hoc,
+and `scripts/build-app.sh` says how to make it.
+
+**Back up its private key.** Until there is a Developer ID, this identity signs the DMG people
+download. A new certificate is a new signature, so if the key is lost, everyone has to allow Tuck in
+Accessibility once more at their next update. In Keychain Access, open the `tuck-signing` keychain
+(unlocked with the password above), export "Tuck Local Signing" with its private key as a `.p12`, with
+a strong password, and keep it somewhere safe outside the repository (`.gitignore` excludes `*.p12`). On
+another Mac, importing that `.p12` into the same keychain, as the script's own `security import` and
+`set-key-partition-list` lines do, keeps the same identity; running the script there instead makes a
+new one. A signed release doesn't use it: the Developer ID signature replaces it, and that change asks
+for Accessibility once more too.
 
 ## Publishing to Homebrew
 
@@ -257,39 +295,44 @@ signature; the first signed build should be tried through every permission befor
 
 ## Changing the bundle ID
 
-Set it once, in `Support/release.env`, on a domain I control (such as `com.example.tuck`).
-macOS knows an app by its bundle ID, so anyone already running a build with the old one finds:
+The bundle ID is `com.millerroberts.Tuck`, set once in `Support/release.env`, in the same family as
+the other Line Apps (`com.millerroberts.Glow`, `com.millerroberts.Pulse`). Until 2026-11-19 it was
+`app.tuck.prototype`, the ID of Tuck 1.0.0 as the site and the tap first shipped it. macOS knows an app
+by its bundle ID, so anyone updating from a build with the old one finds:
 
-- **Permissions granted again:** Accessibility, Full Disk Access and any folder or drive access all
-  belong to the old ID.
-- **Settings back to their defaults**, and setup runs again: they are kept in macOS's preferences under
-  the bundle ID. A one-time import from the old ID could be added if testers should keep them.
-- **Open at login** should be checked again in Settings › General.
-- **The library carries over:** sessions, tucked windows, held items, clipboard history and saved
-  copies live in `~/Library/Application Support/Tuck`, which is named after the app, not the ID.
+- **Accessibility has to be allowed again, and Open at login turned on again** (Settings › General).
+  macOS keys both to the app's identity, so neither carries over, and nothing Tuck does can bring them
+  across. Full Disk Access and any folder or drive access belong to the old ID too, and are asked for
+  again.
+- **Settings carry over.** They are kept in macOS's preferences under the bundle ID. At its first launch
+  under the new ID, before anything reads a setting, Tuck copies every key saved under
+  `app.tuck.prototype` into the new domain, while the new one has none (`SettingsMigration`, called
+  first in `TuckMain`). Setup is marked done with the rest, so it doesn't run again. The old domain is
+  never deleted, so Uninstall, which removes the current ID's settings, leaves it behind.
+- **The library carries over:** tucked windows, held items, clipboard history and saved copies live in
+  `~/Library/Application Support/Tuck`, which is named after the app, not the ID.
 - **What builds with a trial left behind stays under the old ID.** Tuck deletes it at launch, but only
   under its own bundle ID (`TrialLeftovers`).
+- **Logs** move to the new subsystem: `log stream` predicates name `com.millerroberts.Tuck` (see
+  architecture.md's Diagnostics).
+- **The Homebrew cask's** `zap` paths and `uninstall quit:` name the bundle ID, so they change with it.
 
-Local builds take the same bundle ID as releases. On a Mac that runs both, they share settings, and
-the Accessibility grant goes to whichever signature last asked, so run one at a time.
+Changing it again would need the same carry-over from the ID before. Local builds take the same
+bundle ID as releases. On a Mac that runs both, they share settings, and the Accessibility grant goes
+to whichever signature last asked, so run one at a time.
 
 ## Launch checklist
 
 Still open before Tuck is released:
 
-- [ ] **The final bundle ID,** on a domain I control, in `Support/release.env`. Testers then
-  grant Accessibility (and file access) again and lose their settings; their library carries over (see
-  above).
-- [ ] **Every link in `Support/release.env`:** the website is set (Tuck's page on the Line Apps
-  site); the support email, privacy policy and EULA are still empty (`SUPPORT_URL` is optional).
-  `scripts/release.sh` refuses a signed release while one is empty.
 - [ ] **Try Uninstall on a signed build in Applications.** `tccutil reset All` worked from a shell for a
   throwaway bundle that Launch Services knew (one in `~/Applications`), and failed for one in a
   temporary folder, which it couldn't find. It hasn't been run from inside a signed Tuck; when it fails,
   Tuck lists the System Settings steps instead.
-- [ ] **The support email,** in `Support/release.env`, the EULA and the privacy policy.
-- [ ] **The privacy policy URL,** in `Support/release.env` and the EULA, once
-  `docs/legal/privacy-policy.md` is reviewed and published.
+- [ ] **Support and the privacy policy URL in the EULA and the privacy policy.** `Support/release.env`
+  links About to Tuck's GitHub issues and to the drafts in `docs/legal/` on GitHub, with no support
+  email. The drafts still have `[Support email]` and `[privacy policy URL]` placeholders, to be filled
+  once they are reviewed.
 - [ ] **A trademark search for "Tuck" in software** (Nice class 9), at least in the US, the EU and the UK,
   before the name is printed anywhere that's hard to change.
 - [ ] **Testing on macOS 14, 15, 26 and the current release, with real apps,** using the signed,

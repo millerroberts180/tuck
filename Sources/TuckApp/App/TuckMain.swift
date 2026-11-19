@@ -1,9 +1,13 @@
 import AppKit
+import TuckCore
 
 @main
 enum TuckMain {
     @MainActor
     static func main() {
+        // First, before anything reads or writes a setting: the settings saved under the old bundle ID,
+        // app.tuck.prototype, are copied to this one once, while it has none.
+        SettingsMigration.carryOver(to: Bundle.main.bundleIdentifier)
         #if DEBUG
         // `Tuck --snapshot-ui <folder>` renders every Settings pane to PNGs off screen, then quits.
         let arguments = CommandLine.arguments

@@ -63,8 +63,19 @@ if [[ "$config" == "release" ]]; then
   strip -rSTx "$app/Contents/MacOS/Tuck"
 fi
 
-# Ad-hoc signature so macOS will launch the locally built bundle. Not a distribution signature.
-codesign --force --sign - "$app" >/dev/null
+# Signed so macOS will launch the locally built bundle; not a distribution signature. macOS ties the
+# Accessibility grant to the signature, so "Tuck Local Signing" (scripts/signing-identity.sh, once per
+# Mac), which stays the same between builds, keeps the grant across rebuilds. Without it, ad hoc, which
+# changes with every build.
+local_name="Tuck Local Signing"
+local_keychain="$HOME/Library/Keychains/tuck-signing.keychain-db"
+if [[ -f "$local_keychain" ]] && security find-certificate -c "$local_name" "$local_keychain" >/dev/null 2>&1; then
+  security unlock-keychain -p tuck-local-signing "$local_keychain"
+  codesign --force --keychain "$local_keychain" --sign "$local_name" "$app" >/dev/null
+else
+  codesign --force --sign - "$app" >/dev/null
+  echo "Signed ad hoc. Run scripts/signing-identity.sh once to keep the Accessibility grant across builds."
+fi
 
 size="$(du -sh "$app" | cut -f1)"
 echo "Built $app ($size)"
