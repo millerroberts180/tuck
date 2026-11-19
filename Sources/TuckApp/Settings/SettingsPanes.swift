@@ -577,7 +577,7 @@ struct AboutPane: View {
             } header: {
                 Text("Links")
             } footer: {
-                FooterNote("They open in your browser or mail app. Tuck itself goes online only to preview a link or address you copy, while clipboard history is on in Held.")
+                FooterNote("They open in \(ReleaseInfo.linksOpenIn). Tuck itself goes online only to preview a link or address you copy, while clipboard history is on in Held.")
             }
 
             Section {

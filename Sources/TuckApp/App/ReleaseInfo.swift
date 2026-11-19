@@ -15,6 +15,8 @@ enum ReleaseInfo {
     /// What About's Support link says: the email when one is set, otherwise the support page's host (as
     /// the Website row shows its host), and only then the placeholder address.
     static var supportTitle: String { string("TuckSupportEmail") ?? supportURL?.host() ?? supportEmail }
+    /// Where About's links open: the Support link is a mail link only when there is no support page.
+    static var linksOpenIn: String { supportURL == nil ? "your browser or mail app" : "your browser" }
 
     static var copyright: String { string("NSHumanReadableCopyright") ?? "" }
 
