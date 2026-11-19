@@ -1189,7 +1189,7 @@ the old domain has keys, those keys are copied into the new domain. Once copied,
 keys, so it never runs again. It never deletes the old domain, and does nothing under `swift run`,
 which has no bundle ID. Tuck has no sandbox (no entitlements file), so it can read another domain.
 Accessibility and Open at Login can't come across this way: macOS keys them to the app's identity, so
-they are set again after the change. Uninstall removes only the current domain.
+they are set again after the change. Uninstall removes both domains.
 
 ### Accessibility withdrawn
 
@@ -1212,9 +1212,10 @@ its windows. If any window stays tucked or any app stays paused, it stops with n
 says why. Otherwise it stops everything Tuck runs (capture, taps, hot keys, the menu-bar item) and
 closes both persistence stores (`close()`, after which no save is written), so nothing recreates what
 is removed. `Uninstaller` then turns off Open at Login, deletes what Tuck keeps in its support folder
-and the preferences domain, runs `tccutil reset All <bundle ID>` (checking its exit status), and moves the app to the
-Trash, unless it runs from a disk image or a translocated copy. Anything it couldn't do is listed as a
-step to finish by hand, and Tuck quits. `tccutil` finds an app through Launch Services, so it resets an
+and the preferences domain (and the old ID's, if a build left one), runs
+`tccutil reset All <bundle ID>` (checking its exit status), and moves the app to the Trash, unless it
+runs from a disk image or a translocated copy. Anything it couldn't do is listed as a step to finish by
+hand, and Tuck quits. `tccutil` finds an app through Launch Services, so it resets an
 app in Applications but not one in a temporary folder.
 
 `SupportFolder` (TuckCore) names what Tuck keeps there: `library.json`, `clipboard-history.json`, the

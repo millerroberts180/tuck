@@ -43,6 +43,8 @@ enum Uninstaller {
         // permissions of its own to reset.
         let bundleID = Bundle.main.bundleIdentifier
         UserDefaults.standard.removePersistentDomain(forName: bundleID ?? ProcessInfo.processInfo.processName)
+        // The settings a build with the old bundle ID left, which the carry-over copied but kept.
+        UserDefaults.standard.removePersistentDomain(forName: SettingsMigration.previousBundleID)
         if let bundleID, !resetPermissions(of: bundleID) {
             leftovers.append("In System Settings › Privacy & Security, remove Tuck from \(AX.paneName), and from "
                              + "Full Disk Access and Files & Folders if it's there.")

@@ -146,7 +146,8 @@ policy covers that.
   preferences, resets its permissions in Privacy & Security, moves itself to the Trash and quits. Before
   you confirm, it says how many files it saved from drops, such as Mail messages, which may be the only
   copies, and can show them to you. To do the same by hand, quit Tuck, then delete that folder and
-  Tuck's file in `~/Library/Preferences/`.
+  Tuck's files in `~/Library/Preferences/`: `com.millerroberts.Tuck.plist`, and
+  `app.tuck.prototype.plist` if an earlier version left one.
 
 Because we never receive your Tuck data, we cannot see, export or delete it for you; it is all on your
 Mac, under your control.

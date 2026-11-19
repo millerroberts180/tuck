@@ -30,6 +30,8 @@ written for Tuck.
     Support link shows the email when one is set, otherwise the support page's host (`github.com`), as
     the Website row shows its host, and only then the placeholder address. The source plist no longer
     holds `support@tuck.example`, so a build has no `tuck.example` left once the other links are set.
+  - **Uninstall** deletes the settings under the old ID too, so the copy the carry-over keeps doesn't
+    outlive Tuck. The privacy policy draft names both preferences files for removing them by hand.
   - **`scripts/release.sh`** needs `WEBSITE_URL`, `PRIVACY_POLICY_URL`, `EULA_URL`, and `SUPPORT_EMAIL`
     or `SUPPORT_URL` for a signed release, where it needed the email before.
   - **One signature across updates, until there is a Developer ID.** `scripts/signing-identity.sh`
@@ -70,10 +72,6 @@ written for Tuck.
   identity to the next, so the grant carrying over is the pattern Glow's and Pulse's builds rely on,
   not something seen with Tuck.
 - **Deferred:**
-  - **The Homebrew cask** still names `app.tuck.prototype` in `uninstall quit:` and `zap`. It changes
-    in the tap, with the next DMG.
-  - **Uninstall** removes the current ID's settings only. On a Mac that ran a build with the old ID,
-    that domain stays, since the carry-over never deletes it.
   - **The legal drafts** still have their `[Support email]` and `[privacy policy URL]` placeholders.
 
 ## 2026-11-19: Local builds report 1.0.0, and the samples look made up

@@ -308,7 +308,7 @@ by its bundle ID, so anyone updating from a build with the old one finds:
   under the new ID, before anything reads a setting, Tuck copies every key saved under
   `app.tuck.prototype` into the new domain, while the new one has none (`SettingsMigration`, called
   first in `TuckMain`). Setup is marked done with the rest, so it doesn't run again. The old domain is
-  never deleted, so Uninstall, which removes the current ID's settings, leaves it behind.
+  never deleted by the carry-over; Uninstall deletes it with the current ID's settings.
 - **The library carries over:** tucked windows, held items, clipboard history and saved copies live in
   `~/Library/Application Support/Tuck`, which is named after the app, not the ID.
 - **What builds with a trial left behind stays under the old ID.** Tuck deletes it at launch, but only
