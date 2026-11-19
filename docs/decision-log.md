@@ -28,9 +28,9 @@ written for Tuck.
     `SetupPractice` (TuckCore) decides what counts: a restore only when the window is back on screen,
     and nothing tucked or dropped counts for nothing. What is tucked or dropped stays in Tuck afterwards.
     On a display without a notch the step names the bubble and where to click it, unless Settings ›
-    Notch draws a notch there. Tuck doesn't tuck its
-    own windows, so the step says to click another app's window first, or Finder in the Dock. Without
-    Accessibility the tuck row says to press Allow Tuck in the fold, which is what the fold shows then.
+    Notch draws a notch there. Tuck doesn't tuck its own windows, so the step says to click another
+    app's window first, or Finder in the Dock. Without Accessibility the tuck row says to press Allow
+    Tuck in the fold, which is what the fold shows then.
   - **The swipes are one line** under the moves. Tuck sees them on the real notch, and opening by swipe
     ticks Open Tuck like any other way.
   - **The last step** is Open Tuck at login and one line on where Settings and the tutorial are. With
