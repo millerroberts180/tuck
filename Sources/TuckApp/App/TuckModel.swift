@@ -46,6 +46,9 @@ final class TuckModel: ObservableObject {
     /// the mark and lands where the window will be (`frame`, AppKit coordinates), and `landed` is called
     /// as it lands, for the window to be put back under it.
     var onWindowRestoring: ((_ window: ParkedWindow, _ frame: CGRect, _ landed: @escaping () -> Void) -> Void)?
+    /// Told when the fold opens, windows are tucked, a restore finishes or a drop is kept, so setup's
+    /// practice can tick off what the person did; set only while setup is open.
+    var onPractice: ((SetupPractice.Event) -> Void)?
     @Published private(set) var expandedScreenID: CGDirectDisplayID? {
         didSet {
             guard oldValue != expandedScreenID else { return }
@@ -296,6 +299,7 @@ final class TuckModel: ObservableObject {
         searchText = ""
         isSearching = false
         expandedScreenID = screenID
+        onPractice?(.opened)
         // Opened from the keyboard or the menu bar, the panel takes key focus so Escape closes it; the
         // app in front stays active and gets its focus back when the panel closes.
         if trigger == .keyboard || trigger == .menu { requestKeyFocus?(screenID) }
@@ -449,12 +453,6 @@ final class TuckModel: ObservableObject {
         picker.selection.keepOnly(listed)
         picker.openGroups.formIntersection(picker.groups.map(\.id))
         withAnimation(Theme.quick) { windowPicker = picker }
-    }
-
-    /// A tactile tick with the person's setting and Tuck's pacing: a drag crossing into the drop target,
-    /// a deposit, a placement snapping. Setup's practice notch plays the same.
-    func performHaptic(_ event: HapticEvent) {
-        haptics.perform(event)
     }
 
     func isTuckedAway(on screenID: CGDirectDisplayID) -> Bool { tuckedAwayScreenIDs.contains(screenID) }
@@ -1037,6 +1035,7 @@ final class TuckModel: ObservableObject {
         // moves are still settling when the watcher reports it.
         if [.moved, .constrained, .simulated].contains(outcome.result) { updateFrontWindowBar { $0.windowRestored() } }
         waiting.forEach { $0(outcome.result) }
+        onPractice?(.restored(outcome.result))
     }
 
     /// The person went to a window parked off screen (its app's Dock icon, the app switcher): it comes
@@ -1761,6 +1760,7 @@ final class TuckModel: ObservableObject {
         isDragActive = false
         isOverDropTarget = false
         lastTrigger = .deposit
+        onPractice?(.dropped(count: items.count))
     }
 
     /// Whatever just arrived shows at the top of the stream: a lens that would hide it, and a search,
@@ -1779,6 +1779,7 @@ final class TuckModel: ObservableObject {
     /// off screen stays in place until its card is drawn over it, then goes at once, so no frame shows the
     /// spot empty.
     private func depositWindows(_ windows: [ParkedWindow]) {
+        onPractice?(.tucked(count: windows.count))
         if !tuckedAwayScreenIDs.isEmpty { tuckedAwayScreenIDs.removeAll() }
         let ids = Set(windows.map(\.id))
         guard let fly = onWindowsTucked else {

@@ -276,8 +276,8 @@ signature; the first signed build should be tried through every permission befor
 
 ## Info.plist choices
 
-- **Usage strings.** Setup's Just the Usual Folders route reads the Desktop, Documents, Downloads and
-  iCloud Drive folders on purpose, to bring up macOS's prompts before the first drop. Dropped files on
+- **Usage strings.** Ask Now, under File access in Settings › Held, reads the Desktop, Documents,
+  Downloads and iCloud Drive folders on purpose, to bring up macOS's prompts before the first drop. Dropped files on
   external and network drives bring up their own. Each prompt shows a usage string that says why Tuck
   asks: `NSDesktopFolderUsageDescription`, `NSDocumentsFolderUsageDescription`,
   `NSDownloadsFolderUsageDescription`, `NSRemovableVolumesUsageDescription`,

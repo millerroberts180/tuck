@@ -4,10 +4,7 @@ import AppKit
 /// from the geometry in design/logo/generate.py (its 256-unit grid; keep the two in step), so there is no
 /// image resource to bundle or load, and the line takes whichever colour it is given.
 enum TuckLogo {
-    static let ink = NSColor(srgbRed: 0x1D / 255, green: 0x24 / 255, blue: 0x30 / 255, alpha: 1)
     static let blue = NSColor(srgbRed: 0x72 / 255, green: 0x99 / 255, blue: 0xC5 / 255, alpha: 1)
-    /// The wordmark on dark backgrounds, as the reversed lockups set it.
-    static let paper = NSColor(srgbRed: 0xF4 / 255, green: 0xF6 / 255, blue: 0xF9 / 255, alpha: 1)
     /// How faintly the closed surface's mark shows at rest, until the pointer arrives and lights it.
     static let restingOpacity: CGFloat = 0.32
 
@@ -97,52 +94,6 @@ enum TuckLogo {
     static let greetingKeyTimes: [Double] = [0, 0.26, 0.58, 0.8, 1]
     static let greetingDuration: Double = 0.5
     static let greetingCardDelay: Double = 0.035
-
-    /// The time between two of the greeting's keyframes, for SwiftUI's keyframe tracks.
-    static func greetingLeg(_ index: Int) -> Double {
-        (greetingKeyTimes[index] - greetingKeyTimes[index - 1]) * greetingDuration
-    }
-
-    // MARK: Wordmark and lockup
-
-    /// The stacked lockup's grid: the line's 256-unit square centred above the wordmark's grid, 36 units
-    /// clear of the k's ascender, as `stacked` in generate.py places them.
-    static let stackedSize = CGSize(width: 432, height: 314)
-    static let stackedLineOrigin = CGPoint(x: 88, y: -56)
-    static let stackedWordOrigin = CGPoint(x: 14, y: 114)
-
-    /// The wordmark, "tuck", as the centre lines of its strokes on its own grid times `scale`, y down (the
-    /// x-height at 100, the baseline at 164), to be stroked `lineWidth(side: 256 * scale)` wide, as thick
-    /// as the line, with round caps and joins. generate.py outlines the same strokes; where one ends inside
-    /// another (the u's bowl, the k's arm and leg), its cap stays inside it.
-    static func wordmarkPath(scale: CGFloat) -> CGPath {
-        let path = CGMutablePath()
-        func stroke(_ from: CGPoint, _ to: CGPoint) {
-            path.move(to: from)
-            path.addLine(to: to)
-        }
-        // t: the stem, turning into its hook, then the crossbar.
-        path.move(to: CGPoint(x: 44, y: 58))
-        path.addLine(to: CGPoint(x: 44, y: 136))
-        path.addArc(center: CGPoint(x: 72, y: 136), radius: 28, startAngle: .pi, endAngle: .pi / 2, clockwise: true)
-        path.addLine(to: CGPoint(x: 80, y: 164))
-        stroke(CGPoint(x: 26, y: 100), CGPoint(x: 74, y: 100))
-        // u: the left stem into the bowl, which stops 8° short, inside the right stem.
-        path.move(to: CGPoint(x: 112, y: 100))
-        path.addLine(to: CGPoint(x: 112, y: 128))
-        path.addArc(center: CGPoint(x: 148, y: 128), radius: 36, startAngle: .pi, endAngle: .pi * 8 / 180, clockwise: true)
-        stroke(CGPoint(x: 184, y: 100), CGPoint(x: 184, y: 164))
-        // c: three quarters of a circle, open to the right.
-        let c = CGPoint(x: 252, y: 132), radius: CGFloat = 33
-        path.move(to: CGPoint(x: c.x + radius * cos(-.pi / 4), y: c.y + radius * sin(-.pi / 4)))
-        path.addArc(center: c, radius: radius, startAngle: -.pi / 4, endAngle: .pi / 4, clockwise: true)
-        // k: the stem, the arm into it and the leg into the arm.
-        stroke(CGPoint(x: 328, y: 50), CGPoint(x: 328, y: 164))
-        stroke(CGPoint(x: 372, y: 100), CGPoint(x: 328, y: 144))
-        stroke(CGPoint(x: 378, y: 164), CGPoint(x: 340, y: 126))
-        var transform = CGAffineTransform(scaleX: scale, y: scale)
-        return path.copy(using: &transform) ?? path
-    }
 
     /// The menu-bar icon: the small cut as a template image, so the menu bar tints it.
     static func menuBarImage() -> NSImage {

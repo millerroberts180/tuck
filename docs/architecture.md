@@ -51,8 +51,8 @@ Sources/
                        NotchlessStyle
     Shortcuts/         KeyShortcut, ShortcutAction, ShortcutSet (validation, clashes, storage)
     Settings/          SettingsMigration (carries settings over from the old bundle ID)
-    Setup/             TourDesk (the pretend screen's state, shared by the tour and the gesture
-                       step), TourLayout (its geometry, for the real drop and flight logic)
+    Setup/             SetupStep (the steps, and the tutorial's), SetupPractice (which of Tuck's
+                       events tick off a practice move)
     Services/          Service protocols and their TuckCore stand-ins, HapticEvent, HapticPacing
   TuckApp/             AppKit + SwiftUI executable
     App/               Entry point, AppDelegate, TuckModel (shared UI state), TuckLogo (the logo
@@ -78,9 +78,8 @@ Sources/
                        SettingsComponents (choice tiles, action buttons), SettingsWindowController,
                        ShortcutRecorder, SettingsSnapshots (debug only; setup steps too),
                        TuckWindow (closes on ⌘W, for Settings and setup)
-    Setup/             SetupWindowController (+ SetupModel), SetupView (shell, welcome lockup,
-                       permission, done, chips, LogoLine), SetupDesk (the tour, PretendScreen, MiniNotch), SetupChoices
-                       (try-it pads), SetupGestures (the gesture step, SwipeArea)
+    Setup/             SetupWindowController (+ SetupModel), SetupView (shell, Accessibility,
+                       practice and done steps, LogoLine)
     Windows/           AX (Accessibility wrappers, Displays), AccessibilityParkingService,
                        WindowCandidateSource, WindowDragController
     Rest/              ProcessRestService (+ POSIXProcessControl, AudioActivity, RestSwitch)
@@ -711,9 +710,8 @@ Contrast), and the ring and the capsule 3.31:1 off the ground. There is one acce
   and `EmptyCue` (one faint, centred line in place of the list).
 - **Drop outlines** around a surface that hangs from the notch never reach the top, where it meets the
   screen's edge. The real surface's rim is `SurfaceView`'s outline without its top, faded out up the
-  shoulders, for the invitation and the open fold alike (see "The fold" above); the setup tour's
-  pretend notch masks its rim with the same fade. A bubble's floats below the menu bar, so it goes all
-  the way round.
+  shoulders, for the invitation and the open fold alike (see "The fold" above). A bubble's floats
+  below the menu bar, so it goes all the way round.
 - **Menus** give every item an SF Symbol, as macOS draws them. Held items add Quick Look
   (`QuickLookPresenter`, the shared `QLPreviewPanel`) and Share (`ShareLink`).
 - **Checks:** debug builds render every fold state (both depths, each lens, search, Arrange windows, the
@@ -797,7 +795,6 @@ minimised (older) row restores without a flight, as before. How the window itsel
 | Swipes | Local scroll-wheel monitor (Tuck's own windows only) | Always; sees events before the fold's list and the shallow fold's strip, and over the strip holds a gesture's first events until it shows its axis |
 | Global shortcuts | System hot keys (`RegisterEventHotKey`), the chosen combinations only | Only while keyboard shortcuts are on |
 | Recording a shortcut | Local key-down monitor (Tuck's Settings window only) | Only while a shortcut field is recording |
-| Setup swipes | Local scroll-wheel monitor (the setup window only, inside its practice area) | Only while the tour or gesture step is showing |
 | Click, hover, Escape | Delivered to Tuck's own panel | Built into the view/panel, no monitor |
 
 The clipboard check is the one repeating timer Tuck keeps at rest (smooth scrolling's display link runs
@@ -1087,72 +1084,45 @@ glide settles the link is invalidated.
   deleted, when their row is removed; unreferenced folders are swept at launch.
 - `ZipArchiver` runs `/usr/bin/ditto` on a background queue; several files are cloned into a temporary
   folder first (APFS clones cost no space). `ArchiveNaming` follows the Finder's naming.
+- **File permissions:** Settings › Held's File access (`FileAccessSection`) offers two routes. Full Disk
+  Access must be enabled manually in System Settings (macOS does not let apps request it); returning
+  to Settings rechecks it by opening the protected TCC database read-only and closing it immediately.
+  Or `FileAccess.request` reads each present Desktop, Documents, Downloads and iCloud Drive directory
+  in sequence to trigger macOS's folder prompts. Those permissions do not cover arbitrary folders or
+  external/network volumes, so macOS can still ask when those are first used. The folder probes run
+  off the main thread because the system prompt waits for an answer.
 
 ### Setup
 
-`SetupWindowController` hosts `SetupView` in an 840 × 600 pt `TuckWindow`, created when shown and
-released on close. `AppDelegate` shows it at launch until `setup.completed` is set (written on finish,
-not on close), and as a tutorial from Settings › General (`SetupModel.steps` is then only the tour,
-choose and gesture steps). Choices bind straight to `SettingsStore`. The step and the pretend screen's
-`TourDesk` live in `SetupModel`, so Back and Continue keep them, and the tour and the gesture step show
-the same screen.
+`SetupWindowController` hosts `SetupView` in a 600 × 440 pt `TuckWindow`, small so the notch and the
+windows the practice uses stay in view beside it; it is created when shown and released on close.
+`AppDelegate` shows it at launch until `setup.completed` is set (written on finish, not on close), and
+as a tutorial from Settings › General. The steps are `SetupStep`: Accessibility, the practice and the
+finish, or the practice alone as the tutorial, which then shows no progress dots. The step and the
+practice live in `SetupModel`, so Back and Continue keep them. Finishing setup, not the tutorial,
+opens the real fold once.
 
-- **Welcome:** the first step is Tuck's stacked lockup alone, centred a touch above the middle, with no
-  text. The line is `LogoLine` (the shape the pretend notch's mark uses too), trimmed out from the
-  middle of its path, the floor of the dip, to its tails in 0.9 s; 0.42 s in it gives the notch's
-  greeting, the same keyframes as `greetMark`, and the wordmark (`TuckLogo.wordmarkPath`, Ink, or
-  Paper in Dark) fades and rises 10 pt in after 0.3 s. Pointing at it greets again, once per arrival.
-  Under Reduce Motion it is drawn whole and never greets. VoiceOver reads it as "Welcome to Tuck".
-- **The pretend screen** (`PretendScreen`) is SwiftUI on a fixed 760 × 280 pt screen inside an 8 pt
-  bezel the notch hangs from; its geometry is `TourLayout` (TuckCore, y up). It changes `setup.desk`
-  through the model rather than a `Binding`: changes made from a delayed callback through a binding
-  redrew the screen but not the step's text and chips. The notch and the desktop are buttons, so a first
-  click counts even before the window is key.
-- **Tuck and restore:** the Notes window itself follows `DepositFlight`'s path
-  (`TourLayout.flight(open:row:)`), shrinking fast at first and letting go of its contents, to where it
-  lands: the top row's icon in the open fold, or the mark's line on the closed notch, arriving that size.
-  It comes back out along the same path on restore. The row and the mark's card wait for it to land.
-- **Drops:** dragging the PDF lifts a see-through copy from where it was grabbed; the original dims and
-  stays, since Tuck keeps a reference. The drag calls `DropApproach.invitation` and `isArmed` with
-  `TourLayout.zone`, built by the same `DropApproach.approachZone(in:)` the real displays use; the dwell is
-  `DropApproach.dwell`. Over a target the cursor shows the copy badge and the copy draws itself in; let
-  go there, it is drawn into the mark, which swells once or, empty, takes its card; otherwise it slides
-  back. A held PDF
-  drags out into the note.
-- Springs are `SurfaceMotion`'s stiffness and damping through `Animation.surface(_:)`. The Tuck button
-  and rows use small copies of the panel's styles (`MiniButtonStyle`, `MiniIconButtonStyle`,
-  `MiniRowButtonStyle`, `MiniRowChrome`). The pretend fold is black and drawn dark, as the real one is,
-  and still lists the stream as rows.
-- **Swipes** in the tour and the gesture step come from `SwipeArea`: an `NSView` that takes no clicks
-  and keeps a local scroll-wheel monitor while it is in a window. It reads deltas exactly as
-  `SurfaceView` does (precise deltas only, physical direction, began/ended phases, the glide after its
-  own swipe swallowed) and feeds `SwipeGestureTracker`. An event that arrives without a window (posted
-  to the app) is placed by its screen location. As on the real notch, a swipe plays no haptic; a drag
-  crossing into the drop target does, through `TuckModel.performHaptic`, so the setting and the pacing
-  apply. The gesture step teaches open, unfold and close (`TourDesk.Gesture`), so there
-  `PretendScreen.closedNotchOnlyOpens` drops an upward swipe on the closed notch, and its upward pull,
-  before it reaches the desk; on the tour it tucks Tuck away as on the real notch, ticking nothing.
-- **Pointing and clicks:** pointing at the pretend notch opens nothing, as on the real one
-  (`MiniNotch`). One that holds something shows the faint mark with its card and a grey dot; pointed
-  at, the mark greets the pointer (the same keyframes as `greetMark`) and lights in Tuck blue, and the
-  dot gives way to the Tuck button's arrow. An empty one shows "Drop into Tuck". A click anywhere on the
-  closed notch, the arrow included, opens it, and one on the desktop closes it. The lenses
-  (`TourDesk.toggleLens`) narrow the rows as the real ones do; Copied appears only while clipboard
-  history is on, as in Tuck.
-- **Permission:** the step reads `TuckModel.accessibilityTrusted`, which the existing distributed
-  notification updates, and re-reads `AX.isTrusted` when the step appears and when the window becomes
-  key again. Nothing polls. The button shows the system prompt once per launch (`AX.hasPrompted`), then
-  opens the Accessibility list directly.
-- **File permissions:** `FileAccess` offers two routes. Full Disk Access must be enabled manually in
-  System Settings (macOS does not let apps request it); returning to setup rechecks it by opening the
-  protected TCC database read-only and closing it immediately. Or `FileAccess.request` reads each
-  present Desktop, Documents, Downloads and iCloud Drive directory in sequence to trigger macOS's
-  folder prompts. Those permissions do not cover arbitrary folders or external/network volumes, so
-  macOS can still ask when those are first used. The folder probes run off the main thread because the
-  system prompt waits for an answer.
+- **Accessibility:** the first step opens with Tuck's mark (`TuckLogo.markImage`, hidden from
+  VoiceOver) and one line on what Tuck is, then the permission. It reads `TuckModel.accessibilityTrusted`,
+  which the existing distributed notification updates, and re-reads `AX.isTrusted` when the window
+  becomes key again on that step. Nothing polls. The button shows the system prompt once per launch
+  (`AX.hasPrompted`), then opens the Accessibility list directly.
+- **Practice:** four moves done with the real Tuck: open it, tuck a window, bring it back, drop
+  something. `TuckModel.onPractice` is set only while setup is open and reports what already happens
+  at four points: `expand` (any trigger, so a click, a swipe, the shortcut or the menu-bar item),
+  `depositWindows`, the end of a restore with its result, and a drop that was kept. `SetupPractice`
+  turns each into a move: a restore counts only when the window is back on screen (moved, constrained
+  or simulated), and nothing tucked or dropped counts for nothing. Each move counts once, in any order,
+  and `SetupModel` publishes only a new one. No timer and no extra monitor: the hook is a closure call
+  on paths that run anyway. Tuck doesn't tuck its own windows, so the copy names another app's window,
+  or Finder in the Dock when none is open. Without Accessibility the tuck row says to press Allow Tuck
+  in the fold, the same button the fold shows then. On a display without a notch the step says the
+  bubble, and where to click it. The swipes are one line, since `handleSwipe` opening the fold already
+  ticks Open Tuck.
+- **Finish:** where Settings is (the menu-bar item, or a secondary click along the fold's top while
+  the item is hidden) and the tutorial, and Open Tuck at login, on by default the first time.
 - **Prompts held back:** while setup is open, `updateInputTaps` doesn't show the Accessibility prompt
-  for modifier-drag or the mouse wheel, since the permission step comes next; closing setup runs it
-  again.
+  for modifier-drag or the mouse wheel, since setup's first step asks; closing setup runs it again.
 
 ### Rest (experimental)
 
@@ -1331,8 +1301,8 @@ each write it deletes the assets the history no longer names (`removeUnreference
 two minutes old, which may belong to a copy being recorded), and uninstall empties `Clipboard/` one
 asset at a time. Clear
 Clipboard History also deletes the set-aside files (`removeSetAsideFiles`), since they hold old entries.
-Turning history off with entries saved asks first (`ClipboardHistorySwitch`, in Settings › Held and
-setup's Choose step): Keep History leaves them, Delete History clears them as Clear does, and Cancel
+Turning history off with entries saved asks first (`ClipboardHistorySwitch`, in Settings › Held):
+Keep History leaves them, Delete History clears them as Clear does, and Cancel
 leaves history on.
 
 ## Efficiency budget

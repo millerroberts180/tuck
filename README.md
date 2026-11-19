@@ -50,8 +50,8 @@ with the [Line Apps installer](https://lineapps.vercel.app).
 
 Tuck isn't notarized yet, so macOS stops it the first time it opens. Choose **Done**, then open System
 Settings › Privacy & Security and choose **Open Anyway** beside Tuck. On macOS 14 you can also
-Control-click Tuck in Applications and choose **Open**. Setup then walks you through Accessibility, for
-tucking windows, and file access, for what you drop.
+Control-click Tuck in Applications and choose **Open**. Setup then asks for Accessibility, for tucking
+windows, and has you try Tuck on the notch itself.
 
 ## Private and light
 

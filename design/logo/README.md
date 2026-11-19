@@ -23,9 +23,8 @@ light and dark backgrounds alike. Only the lockups have `-reversed`, which turns
 
 The app icon is built into `Support/AppIcon.icns` and copied into the bundle by `scripts/build-app.sh`.
 In the app, `Sources/TuckApp/App/TuckLogo.swift` draws the line in code: the mark on the closed notch,
-the menu-bar icon (the small cut, as a template image), the logo on the About pane in Settings, the
-setup tour's notch and, with the wordmark (`wordmarkPath`, the centre lines of the strokes `WORD_PARTS`
-outlines), the stacked lockup on setup's first page. There is no image resource to load.
+the menu-bar icon (the small cut, as a template image), the logo on the About pane in Settings and the
+mark at the top of setup's first page. There is no image resource to load.
 
 To change the logo, edit the geometry in `generate.py`, then run both steps from the repository root:
 
@@ -34,8 +33,7 @@ python3 design/logo/generate.py     # every SVG
 swift design/logo/render.swift      # PNGs, Support/AppIcon.icns, favicon.ico and web icons
 ```
 
-If the geometry changes, including the wordmark's or the stacked lockup's, update the numbers in
-`TuckLogo.swift` to match.
+If the line's geometry changes, update the numbers in `TuckLogo.swift` to match.
 
 ## Colours
 

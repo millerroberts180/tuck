@@ -35,11 +35,11 @@ swift run Tuck -TuckSupportDirectory /tmp/tuck-shots -TuckOpenSettingsOnLaunch Y
 swift run Tuck -TuckSupportDirectory /tmp/tuck-shots -TuckOpenSetupOnLaunch YES
 swift run Tuck -TuckSupportDirectory /tmp/tuck-shots -TuckOpenTutorialOnLaunch YES
 
-# Render every Settings pane and setup step, light and dark, to PNGs without opening a window; and the
-# fold and the notch: States 0 to 2, each lens, every kind as a tile (gallery-tiles-*), an open editor,
-# stack and app's windows, searches (chips, a lens stepping aside, no matches), Arrange, the window
-# picker, the prompts, the in-panel drop for a file, a link and text, and the closed surface's states
-# and drop labels, in Light, Dark and both Increase Contrast appearances
+# Render every Settings pane and every setup step in each of its states, light and dark, to PNGs
+# without opening a window; and the fold and the notch: States 0 to 2, each lens, every kind as a tile
+# (gallery-tiles-*), an open editor, stack and app's windows, searches (chips, a lens stepping aside,
+# no matches), Arrange, the window picker, the prompts, the in-panel drop for a file, a link and text,
+# and the closed surface's states and drop labels, in Light, Dark and both Increase Contrast appearances
 swift run Tuck --snapshot-ui /tmp/tuck-settings
 swift run Tuck --snapshot-panel /tmp/tuck-panel
 ```
@@ -68,8 +68,8 @@ clearing them, how windows are tucked, grouped, ordered and restored, placement 
 placement chooser, choosing windows to tuck, drops and file intake, persistence and recovery, Rest
 eligibility, keyboard shortcuts, haptic pacing, swipe and scroll maths, surface layout and springs,
 settings carried over from the old bundle ID (`SettingsMigrationTests`, on throwaway preferences
-domains it removes again), and setup's tour: its steps, the gesture practice through the real swipe
-tracker, and the pretend desktop's drop and flight geometry.
+domains it removes again), and setup: its steps, and which of the events Tuck reports tick off a
+practice move.
 
 ## Releasing
 

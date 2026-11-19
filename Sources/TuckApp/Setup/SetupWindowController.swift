@@ -2,29 +2,19 @@ import AppKit
 import SwiftUI
 import TuckCore
 
-/// Where the person is in setup, and what they've tried. Choices write straight to `SettingsStore`, so
-/// every one is a real setting from the moment it's made.
+/// Where the person is in setup, and which of Tuck's moves they have done with the real Tuck.
 final class SetupModel: ObservableObject {
-    /// In order: what Tuck is, the loop on a pretend desktop, the extras to choose right after, the
-    /// notch's gestures to try, then the permissions (windows and files), then where Tuck lives. Value
-    /// before the ask.
-    enum Step: Int, CaseIterable {
-        case welcome, tour, choose, gestures, permission, done
-    }
-
     static let completedKey = "setup.completed"
 
-    /// This run's steps: everything the first time, only the teaching steps as a tutorial.
-    let steps: [Step]
+    /// This run's steps: all of them the first time, only the practice as a tutorial (see `SetupStep`).
+    let steps: [SetupStep]
     let isTutorial: Bool
-    @Published var step: Step
-    /// The pretend screen, shared by the tour and the gesture step.
-    @Published var desk = TourDesk()
+    @Published var step: SetupStep
+    /// The moves done on the real notch, as TuckModel reports them.
+    @Published var practice = SetupPractice()
     @Published var openAtLogin: Bool
-    /// Files: whether Full Disk Access is on, and each protected folder's answer once asked for.
-    @Published var hasFullDiskAccess = FileAccess.hasFullDiskAccess
-    @Published var folderAnswers: [FileAccess.Folder: Bool] = [:]
-    @Published var isAskingForFolders = false
+    /// On a Mac without a notch, Tuck is a small bubble in the middle of the menu bar.
+    var hasNotch = NSScreen.screens.contains { $0.safeAreaInsets.top > 0 }
 
     let settings: SettingsStore
     let app: TuckModel
@@ -34,11 +24,17 @@ final class SetupModel: ObservableObject {
         self.settings = settings
         self.app = app
         isTutorial = tutorialOnly
-        steps = tutorialOnly ? [.tour, .choose, .gestures] : Step.allCases
+        steps = SetupStep.steps(tutorialOnly: tutorialOnly)
         step = steps[0]
         // On by default the first time; afterwards, whatever the system's login items say.
         openAtLogin = LoginItem.isAvailable
             && (LoginItem.isEnabled || !UserDefaults.standard.bool(forKey: Self.completedKey))
+        // Ticked off as the real Tuck does each move, and published only when one is new.
+        app.onPractice = { [weak self] event in
+            guard let self else { return }
+            var practice = self.practice
+            if practice.record(event) { self.practice = practice }
+        }
     }
 
     var isFirst: Bool { step == steps.first }
@@ -48,10 +44,6 @@ final class SetupModel: ObservableObject {
     func next() {
         guard let index = steps.firstIndex(of: step), index + 1 < steps.count else { return finish() }
         step = steps[index + 1]
-        if step == .permission {
-            app.accessibilityChanged(trusted: AX.isTrusted)
-            refreshFileAccess()
-        }
     }
 
     func back() {
@@ -70,30 +62,13 @@ final class SetupModel: ObservableObject {
     func requestAccessibility() {
         if AX.hasPrompted { AX.openAccessibilitySettings() } else { AX.promptForTrust() }
     }
-
-    /// Back from System Settings, Full Disk Access may have been switched on; checking never prompts.
-    func refreshFileAccess() {
-        hasFullDiskAccess = FileAccess.hasFullDiskAccess
-    }
-
-    /// macOS's own prompts for the Desktop, Documents, Downloads and iCloud Drive, one after another, now
-    /// rather than at the first drop from each.
-    func askForFolders() {
-        guard !isAskingForFolders else { return }
-        isAskingForFolders = true
-        FileAccess.request(FileAccess.Folder.present, answered: { [weak self] folder, allowed in
-            self?.folderAnswers[folder] = allowed
-        }, finished: { [weak self] in
-            self?.isAskingForFolders = false
-        })
-    }
 }
 
 /// Tuck's first-run setup, and the tutorial it becomes when reopened from Settings. Created when shown
 /// and released, with its SwiftUI tree, when closed, like Settings.
 final class SetupWindowController: NSObject, NSWindowDelegate {
-    /// Wide enough for the pretend desktop and a row of tiles; reading steps are narrowed inside it.
-    static let size = CGSize(width: 840, height: 600)
+    /// Small, so the notch and the windows the practice uses stay in view beside it.
+    static let size = CGSize(width: 600, height: 440)
 
     private let window: NSWindow
     private let setup: SetupModel
@@ -126,12 +101,12 @@ final class SetupWindowController: NSObject, NSWindowDelegate {
 
     /// Back from System Settings: look again, in case the permission's notice hasn't arrived yet.
     func windowDidBecomeKey(_ notification: Notification) {
-        guard setup.step == .permission else { return }
+        guard setup.step == .accessibility else { return }
         setup.app.accessibilityChanged(trusted: AX.isTrusted)
-        setup.refreshFileAccess()
     }
 
     func windowWillClose(_ notification: Notification) {
+        setup.app.onPractice = nil
         DispatchQueue.main.async { [weak self] in self?.onClose?() }
     }
 }

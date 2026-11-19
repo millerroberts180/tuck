@@ -159,7 +159,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if opensSetup { showSetup(tutorialOnly: false) }
     }
 
-    /// Setup the first time; the tutorial (its teaching steps only) from Settings › General. One window
+    /// Setup the first time; the tutorial (its practice only) from Settings › General. One window
     /// at a time, created when shown and released when closed.
     private func showSetup(tutorialOnly: Bool) {
         if let setupWindow { return setupWindow.present() }
@@ -170,7 +170,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         window.onClose = { [weak self] in
             self?.setupWindow = nil
-            // A feature chosen during setup that needs Accessibility asks now, if setup didn't.
+            // A feature that needs Accessibility, held back while setup was open, asks now if setup didn't.
             self?.updateInputTaps()
         }
         setupWindow = window
@@ -290,7 +290,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// Matches the optional event taps (modifier-drag, mouse wheel) to the settings. Each tap exists only
     /// while its feature is on; a feature switched on without Accessibility shows the system prompt once,
-    /// though not while setup is open, since its permission step asks.
+    /// though not while setup is open, since its first step asks.
     private func updateInputTaps() {
         guard let settings, !uninstalling else { return }
         let dragReady = windowDrag.update(enabled: settings.windowDragEnabled, modifiers: settings.windowDragModifiers)

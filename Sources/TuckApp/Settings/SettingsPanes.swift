@@ -62,7 +62,7 @@ struct GeneralPane: View {
                     .buttonStyle(ActionButtonStyle())
                 } label: {
                     Text("Tutorial")
-                    Text("The tour from setup: tucking a window, holding a file, the extras, and the notch's swipes.")
+                    Text("Setup's practice again, on the real Tuck: open it, tuck a window, bring it back and drop something.")
                 }
             }
 
@@ -475,9 +475,9 @@ struct HeldPane: View {
     }
 }
 
-/// The clipboard history switch, here and in setup's Choose step. Turning it off with something saved asks
-/// first whether to keep that or delete it, since what was copied may be private and the person may want
-/// it gone with the switch. With nothing saved there is nothing to ask.
+/// The clipboard history switch. Turning it off with something saved asks first whether to keep that or
+/// delete it, since what was copied may be private and the person may want it gone with the switch. With
+/// nothing saved there is nothing to ask.
 enum ClipboardHistorySwitch {
     static let title = "Turn off clipboard history?"
     static let keep = "Keep History"
@@ -697,9 +697,9 @@ private extension ClipboardRetention {
     }
 }
 
-/// Whether macOS lets Tuck read files dropped from anywhere, with the same two ways as setup: Full Disk
-/// Access for every place at once, or the usual folders asked for now. Coming back to the window from
-/// System Settings looks again; looking never prompts.
+/// Whether macOS lets Tuck read files dropped from anywhere, two ways: Full Disk Access for every place
+/// at once, or the usual folders asked for now. Coming back to the window from System Settings looks
+/// again; looking never prompts.
 struct FileAccessSection: View {
     @State private var hasFullDiskAccess = FileAccess.hasFullDiskAccess
     @State private var answers: [FileAccess.Folder: Bool] = [:]

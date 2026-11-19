@@ -38,23 +38,22 @@ Apps is closed shows it.
 
 ## Setup and the tutorial
 
-The first launch opens **Set Up Tuck**, a short window that teaches by doing. Every step has Back and
-Continue (Return), and closing it at any point is safe: it opens again at the next launch until it is
-finished.
+The first launch opens **Set Up Tuck**, a small window that teaches by doing, on the real Tuck. Every
+step has Back and Continue (Return), and closing it at any point is safe: it opens again at the next
+launch until it is finished.
 
 | Step | What happens |
 | --- | --- |
-| Welcome | Tuck's logo and nothing else: the line draws itself out from its dip and dips once, as the notch does when pointed at, while the wordmark rises in under it. Point at it and it dips again |
-| How Tuck works | A pretend MacBook screen with a notch, a Notes window and a PDF. Open the notch (click it, or swipe down on it), press Tuck on the fold's left wing (the window flies up along Tuck's own path and lands in its row at the top), drag the PDF to the notch (a see-through copy follows the pointer while the file stays put, and the notch widens to say "Drop file into Tuck"), then bring them back: click the window's row and it flies back out to where it was, or drag the PDF from the fold into the note. Closed and holding something, the notch shows the faint mark with its card in the dip and a grey dot; pointed at, the mark greets the pointer and lights up in Tuck blue and the dot gives way to the Tuck button's arrow, but nothing opens until you click or swipe. The pretend fold is black, as the real one is. Windows and Files beside the notch narrow the list. Each move is ticked off as you do it. The Haptic feedback switch sits above it |
-| Choose what you want | Six pads in a row: point at one to see it work, and switch it on or off. On by default: Widen when a drag comes near, Show in menu bar. Off: Use keyboard shortcuts, Modifier-drag, Smooth scrolling, Clipboard history |
-| Swipe on the notch | The same pretend screen, with whatever you tucked still there: swipe down to open, down again to unfold everything, and up to fold back and close. Only two-finger swipes tick these off; without a trackpad, click the notch to open it and the desktop to close it |
-| Permissions | Accessibility for window actions; for dropped files, enable Full Disk Access in System Settings to avoid later access prompts, or have setup ask for Desktop, Documents, Downloads and iCloud Drive. The page updates when you return; Continue works without either permission |
-| You're set | Where Tuck lives (while it holds nothing, the notch looks as it always has), how to open it, and Open Tuck at login (on by default the first time) |
+| Allow Accessibility | Tuck's mark and what Tuck is, in a line, then the one permission tucking needs: what Tuck reads about windows and what it never reads. Open System Settings… asks for it; the page notices when you turn Tuck on. Continue works without it |
+| Try it on the notch | Four moves, each ticked off when Tuck does it, however you did it: open Tuck, tuck a window, bring it back from its tile, and drop a file, link or text onto the notch. On a display without a notch the step is "Try it in the menu bar" and points at the bubble. A line below names the two-finger swipes |
+| You're set | Where Settings and the tutorial are, and Open Tuck at login (on by default the first time) |
 
-The pretend screen runs Tuck's own drop invitation, swipe tracker, flight path and springs on its own
-geometry, so it touches no real window and needs no permission. Every switch is the real setting.
+Nothing in setup is a copy of Tuck: the moves are the real ones, so a window you tuck or a file you
+drop is still in Tuck afterwards. Tuck never tucks its own windows, so click another app's window
+before pressing Tuck, or click Finder in the Dock if no other window is open. Everything setup doesn't
+mention, such as clipboard history, keyboard shortcuts and file access, is in Settings at its default.
 Finishing opens the real fold once, so you see where Tuck lives. **Settings → General → Open
-Tutorial…** opens the same window as "Tuck Tutorial", with only the tour, the choices and the swipes.
+Tutorial…** opens the same window as "Tuck Tutorial", with only the practice.
 
 ## Using Tuck
 
@@ -274,9 +273,9 @@ Keyboard shortcuts are off by default; see "Keyboard shortcuts" below.
 - **Haptics** only for three moments: a drag crossing into the drop target, something landing in the
   mark, and a window placement snapping into place (Arrange windows or Command-click). Opening,
   closing and swipes add no tap, and taps are at least 0.35 s apart.
-- **Setup:** a first-run window that teaches Tuck on a pretend screen, then the optional extras, the
-  notch's swipes, Accessibility, file access and open at login; reopened from Settings it is a
-  tutorial (see "Setup and the tutorial").
+- **Setup:** a first-run window that asks for Accessibility, has you open Tuck, tuck a window, bring it
+  back and drop something on the real notch, then offers open at login; reopened from Settings it is a
+  tutorial of the practice alone (see "Setup and the tutorial").
 - **Settings:** a sidebar of panes, as in System Settings. General: open at login, menu-bar item,
   haptics, Accessibility status, the tutorial, Quit. Notch: which displays show Tuck (all, built-in or
   external), a bubble or a drawn notch on displays without one, how many cards sit in a row (2 to 5)
@@ -550,17 +549,19 @@ that can rest.
 Tucking, restoring and arranging real windows, and the optional modifier-drag and mouse-wheel
 features, need **Accessibility** (System Settings → Privacy & Security → Accessibility, named Device
 Control and Data Access from macOS 27; Tuck uses whichever name the running system shows). Setup's
-permission step offers it; otherwise Tuck asks the first time you use one of those features, never at
+first step offers it; otherwise Tuck asks the first time you use one of those features, never at
 launch. It notices a newly granted permission without restarting, and a withdrawn one too: turned off
 while windows are tucked, the mark and dot shake and the foot of the fold says that they can't come
 back until Tuck is allowed again (minimised ones wait in the Dock meanwhile).
 
 Tuck also needs macOS file access to read dropped files for their thumbnail, kind and size, and to
-follow them if they move. In setup, choose **Allow Full Disk Access** for access to files from any
-location without later file-access prompts. macOS requires you to enable this yourself in System
-Settings → Privacy & Security → Full Disk Access; Tuck cannot request it. Alternatively, **Just the
-Usual Folders** asks now for Desktop, Documents, Downloads and iCloud Drive. It does not authorize
-other locations, such as external or network drives, which macOS may ask about when first used. A local
+follow them if they move. Without anything set up, macOS asks about each folder the first time you
+drop from it. In Settings → Held → File access, **Open System Settings…** beside Full Disk Access is
+for access to files from any location without later file-access prompts. macOS requires you to enable
+this yourself in System Settings → Privacy & Security → Full Disk Access; Tuck cannot request it.
+Alternatively, **Ask Now** beside **Or just the usual folders** asks now for Desktop, Documents,
+Downloads and iCloud Drive. It does not authorize other locations, such as external or network drives,
+which macOS may ask about when first used. A local
 build keeps its place in the Accessibility list across rebuilds once `scripts/signing-identity.sh` has
 made its signing identity; signed ad hoc, each rebuild may need to be re-added.
 

@@ -2,9 +2,8 @@ import AppKit
 import SwiftUI
 import TuckCore
 
-/// Setup's content: the step showing, then a footer with progress dots, Back and Continue. Reading
-/// steps sit at a comfortable width; the steps you do things in use the whole window, and the welcome,
-/// Tuck's lockup alone, is centred in it.
+/// Setup's content: the step showing, then a footer with progress dots, Back and Continue. The tutorial
+/// is one step, so it has no dots.
 struct SetupView: View {
     @ObservedObject var setup: SetupModel
 
@@ -12,21 +11,18 @@ struct SetupView: View {
         VStack(spacing: 0) {
             Group {
                 switch setup.step {
-                case .welcome: WelcomeStep()
-                case .tour: TourStep(setup: setup)
-                case .choose: ChooseStep(settings: setup.settings, model: setup.app)
-                case .gestures: GesturesStep(setup: setup, settings: setup.settings)
-                case .permission: narrow { PermissionStep(setup: setup, app: setup.app) }
-                case .done: narrow { DoneStep(setup: setup, settings: setup.settings) }
+                case .accessibility: AccessibilityStep(setup: setup, app: setup.app)
+                case .practice: PracticeStep(setup: setup, app: setup.app)
+                case .done: DoneStep(setup: setup, settings: setup.settings)
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .padding(.horizontal, 32)
-            .padding(.top, setup.step == .welcome ? 0 : 34)
+            .padding(.top, 34)
 
             Divider()
             HStack(spacing: 8) {
-                progress
+                if setup.steps.count > 1 { progress }
                 Spacer()
                 if !setup.isFirst {
                     Button("Back", action: setup.back)
@@ -45,10 +41,6 @@ struct SetupView: View {
     private var primaryTitle: String {
         guard setup.isLast else { return "Continue" }
         return setup.isTutorial ? "Done" : "Start Using Tuck"
-    }
-
-    private func narrow<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
-        content().frame(maxWidth: 600, alignment: .leading)
     }
 
     private var progress: some View {
@@ -84,119 +76,6 @@ struct StepTitle: View {
     }
 }
 
-/// Under a demo: one chip per thing to try, ticked as it happens, and a line saying what the latest
-/// one means.
-struct ExperiencedChips: View {
-    struct Item: Identifiable {
-        let id: String
-        let title: String
-        let symbol: String
-    }
-
-    let items: [Item]
-    let done: Set<String>
-    let latest: String?
-    let placeholder: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 6) {
-                ForEach(items) { item in
-                    let seen = done.contains(item.id)
-                    HStack(spacing: 4) {
-                        Image(systemName: seen ? "checkmark.circle.fill" : item.symbol)
-                            .font(.system(size: 10, weight: .semibold))
-                        Text(item.title).font(.system(size: 11, weight: seen ? .semibold : .regular))
-                    }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Capsule().fill(seen ? Color.accentColor.opacity(0.16) : Color.secondary.opacity(0.08)))
-                    .foregroundStyle(seen ? Color.accentColor : Color.secondary)
-                    .animation(.easeOut(duration: 0.2), value: seen)
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel("\(item.title), \(seen ? "done" : "not yet")")
-                }
-            }
-            Text(latest ?? placeholder)
-                .font(.system(size: 12))
-                .foregroundStyle(.secondary)
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
-                .accessibilityAddTraits(.updatesFrequently)
-        }
-    }
-}
-
-// MARK: - Reading steps
-
-/// The first page: Tuck's lockup, the line above the wordmark, and nothing else. As it appears the line
-/// draws itself out from the floor of its dip to its tails and greets as the notch does, and the
-/// wordmark rises in under it; pointing at it greets again. Under Reduce Motion it is simply there.
-struct WelcomeStep: View {
-    @State private var drawn: CGFloat = Theme.reduceMotion ? 1 : 0
-    @State private var isWordShown = Theme.reduceMotion
-    @State private var greetings = 0
-    @State private var lastGreeting = Date.distantPast
-
-    /// The lockup's grid units per point: 285 pt wide, its line 16 pt thick.
-    private static let scale: CGFloat = 0.66
-    private static let wordInk = Color(nsColor: NSColor(name: nil) { appearance in
-        appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua ? TuckLogo.paper : TuckLogo.ink
-    })
-
-    var body: some View {
-        let scale = Self.scale
-        let side = 256 * scale
-        let style = StrokeStyle(lineWidth: TuckLogo.lineWidth(side: side), lineCap: .round, lineJoin: .round)
-        let reach = TuckLogo.greetingReach
-        ZStack(alignment: .topLeading) {
-            KeyframeAnimator(initialValue: CGFloat(0), trigger: greetings) { greeting in
-                LogoLine(reach: greeting)
-                    .trim(from: 0.5 - drawn / 2, to: 0.5 + drawn / 2)
-                    .stroke(Color(nsColor: TuckLogo.blue), style: style)
-                    .frame(width: side, height: side)
-            } keyframes: { _ in
-                KeyframeTrack {
-                    CubicKeyframe(reach[1], duration: TuckLogo.greetingLeg(1))
-                    CubicKeyframe(reach[2], duration: TuckLogo.greetingLeg(2))
-                    CubicKeyframe(reach[3], duration: TuckLogo.greetingLeg(3))
-                    CubicKeyframe(reach[4], duration: TuckLogo.greetingLeg(4))
-                }
-            }
-            .offset(x: TuckLogo.stackedLineOrigin.x * scale, y: TuckLogo.stackedLineOrigin.y * scale)
-            Path(TuckLogo.wordmarkPath(scale: scale))
-                .stroke(Self.wordInk, style: style)
-                .offset(x: TuckLogo.stackedWordOrigin.x * scale,
-                        y: TuckLogo.stackedWordOrigin.y * scale + (isWordShown ? 0 : 10))
-                .opacity(isWordShown ? 1 : 0)
-        }
-        .frame(width: TuckLogo.stackedSize.width * scale, height: TuckLogo.stackedSize.height * scale,
-               alignment: .topLeading)
-        .contentShape(Rectangle())
-        .onHover { inside in if inside { greet() } }
-        // A touch above the middle, where the eye puts the centre.
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.bottom, 44)
-        .accessibilityElement()
-        .accessibilityLabel("Welcome to Tuck")
-        .accessibilityAddTraits(.isImage)
-        .task {
-            guard !Theme.reduceMotion else { return }
-            withAnimation(.timingCurve(0.22, 1, 0.36, 1, duration: 0.9)) { drawn = 1 }
-            withAnimation(.easeOut(duration: 0.5).delay(0.3)) { isWordShown = true }
-            try? await Task.sleep(for: .milliseconds(420))
-            greet()
-        }
-    }
-
-    /// Once per arrival, as on the notch: a greeting under way is left to finish.
-    private func greet() {
-        guard !Theme.reduceMotion, Date().timeIntervalSince(lastGreeting) >= TuckLogo.greetingDuration else { return }
-        lastGreeting = Date()
-        greetings += 1
-    }
-}
-
 /// Tuck's line as a shape, its dip at a reach (see `TuckLogo.linePath`), for a square frame.
 struct LogoLine: Shape {
     var reach: CGFloat = 0
@@ -204,133 +83,111 @@ struct LogoLine: Shape {
     func path(in rect: CGRect) -> Path { Path(TuckLogo.linePath(side: rect.width, reach: reach)) }
 }
 
-struct PermissionStep: View {
+// MARK: - Steps
+
+/// The first page: Tuck's mark and what Tuck is, in a line, then the one permission tucking needs.
+struct AccessibilityStep: View {
     @ObservedObject var setup: SetupModel
     @ObservedObject var app: TuckModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            StepTitle(title: "Two permissions",
-                      detail: "Allow access to your windows, then choose how broadly Tuck can read dropped files. Both stay on this Mac.")
-            windows
-                .padding(.bottom, 22)
-            files
+            Image(nsImage: TuckLogo.markImage(side: 40))
+                .accessibilityHidden(true)
+            Text("Tuck holds windows, files, links and text at the top of the screen until you need them.")
+                .font(.system(size: 13))
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 8)
+                .padding(.bottom, 28)
+            StepTitle(title: "Allow \(AX.paneName)",
+                      detail: "To tuck, restore and arrange windows, Tuck reads which window is in front, and each window's app, title, position and size. Never what's inside, or anything you type.")
+            VStack(alignment: .leading, spacing: 8) {
+                if app.accessibilityTrusted {
+                    Label("Access is on.", systemImage: "checkmark.seal.fill")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.green)
+                } else {
+                    Button(action: setup.requestAccessibility) {
+                        ActionLabel(title: "Open System Settings…", symbol: "lock.open")
+                    }
+                    .buttonStyle(ActionButtonStyle())
+                    Text("Turn Tuck on in Privacy & Security › \(AX.paneName). This page notices when you do.")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
         }
         .animation(.easeOut(duration: 0.2), value: app.accessibilityTrusted)
-        .animation(.easeOut(duration: 0.2), value: setup.hasFullDiskAccess)
-        .animation(.easeOut(duration: 0.2), value: setup.folderAnswers)
-    }
-
-    private var windows: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            header("Windows: \(AX.paneName)", symbol: "macwindow")
-            check("To tuck, restore and arrange windows, Tuck reads which window is in front, and each window's app, title, position and size. Never what's inside, or anything you type.")
-            if app.accessibilityTrusted {
-                allowed("Access is on.")
-            } else {
-                Button(action: setup.requestAccessibility) {
-                    ActionLabel(title: "Open System Settings…", symbol: "lock.open")
-                }
-                .buttonStyle(ActionButtonStyle())
-                note("Turn Tuck on in Privacy & Security › \(AX.paneName). This page notices when you do.")
-            }
-        }
-    }
-
-    /// Full Disk Access covers every place at once, external drives included; the usual folders can
-    /// instead be asked for now, one prompt each.
-    private var files: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            header("Files: from anywhere you drop them", symbol: "folder")
-            check("Files stay where they are. Tuck keeps where each one is, and reads it to show its thumbnail, kind and size and to follow it if it moves. macOS asks the first time Tuck touches the Desktop, Documents, Downloads, iCloud Drive or an external drive.")
-            if setup.hasFullDiskAccess {
-                allowed("Full Disk Access is on: files from anywhere, external drives included.")
-            } else {
-                HStack(spacing: 8) {
-                    Button(action: FileAccess.openFullDiskAccessSettings) {
-                        ActionLabel(title: "Allow Full Disk Access…", symbol: "externaldrive.badge.checkmark")
-                    }
-                    .buttonStyle(ActionButtonStyle())
-                    Button(action: setup.askForFolders) {
-                        ActionLabel(title: setup.folderAnswers.isEmpty ? "Just the Usual Folders" : "Ask Again",
-                                    symbol: "folder.badge.questionmark")
-                    }
-                    .buttonStyle(ActionButtonStyle())
-                    .disabled(setup.isAskingForFolders)
-                }
-                if !setup.folderAnswers.isEmpty {
-                    HStack(spacing: 12) {
-                        ForEach(FileAccess.Folder.present) { folder in
-                            if let allowed = setup.folderAnswers[folder] {
-                                Label(folder.title, systemImage: allowed ? "checkmark.circle.fill" : "xmark.circle")
-                                    .foregroundStyle(allowed ? Color.green : Color.secondary)
-                                    .accessibilityLabel("\(folder.title), \(allowed ? "allowed" : "not allowed")")
-                            }
-                        }
-                    }
-                    .font(.system(size: 12, weight: .medium))
-                }
-                note("For no later file-access prompts, turn Tuck on in Privacy & Security › Full Disk Access; macOS requires you to switch this on yourself, and this page notices when you return. Or ask now for Desktop, Documents, Downloads and iCloud Drive. That choice does not cover other folders or drives, which macOS may ask about when first used.")
-            }
-        }
-    }
-
-    private func header(_ title: String, symbol: String) -> some View {
-        Label(title, systemImage: symbol)
-            .font(.system(size: 13, weight: .semibold))
-            .accessibilityAddTraits(.isHeader)
-    }
-
-    private func allowed(_ text: String) -> some View {
-        Label(text, systemImage: "checkmark.seal.fill")
-            .font(.system(size: 13, weight: .medium))
-            .foregroundStyle(.green)
-    }
-
-    private func note(_ text: String) -> some View {
-        Text(text)
-            .font(.system(size: 11))
-            .foregroundStyle(.secondary)
-            .fixedSize(horizontal: false, vertical: true)
-    }
-
-    private func check(_ text: String) -> some View {
-        Label {
-            Text(text).fixedSize(horizontal: false, vertical: true)
-        } icon: {
-            Image(systemName: "checkmark.circle").foregroundStyle(Color.accentColor)
-        }
-        .font(.system(size: 12))
-        .foregroundStyle(.secondary)
     }
 }
 
+/// Tuck's core moves, done with the real Tuck on the real notch or bubble: each ticks off when Tuck
+/// reports it (`SetupPractice`), whatever way it was done.
+struct PracticeStep: View {
+    @ObservedObject var setup: SetupModel
+    @ObservedObject var app: TuckModel
+
+    var body: some View {
+        let place = setup.hasNotch ? "the notch" : "the bubble"
+        VStack(alignment: .leading, spacing: 0) {
+            StepTitle(title: setup.hasNotch ? "Try it on the notch" : "Try it in the menu bar",
+                      detail: setup.hasNotch ? "Tuck lives in the notch at the top of the screen. Each of these ticks off as you do it."
+                                             : "Tuck lives in the small bubble in the middle of the menu bar. Each of these ticks off as you do it.")
+            VStack(alignment: .leading, spacing: 14) {
+                row(.open, title: "Open Tuck", symbol: "cursorarrow.click",
+                    detail: setup.hasNotch ? "Click the notch." : "Click either end of the bubble, beside its arrow.")
+                row(.tuck, title: "Tuck a window", symbol: "arrow.up",
+                    detail: app.accessibilityTrusted
+                        ? "Click another app's window so it's in front, then open Tuck and press Tuck on the left. No other window open? Click Finder in the Dock."
+                        : "Tuck needs \(AX.paneName) for this. Press Allow Tuck in the open fold to turn it on.")
+                row(.bringBack, title: "Bring it back", symbol: "macwindow",
+                    detail: "Click the window's tile in the fold. It goes back where it was.")
+                row(.drop, title: "Drop something", symbol: "tray.and.arrow.down",
+                    detail: "Drag a file, link or text onto \(place). Files stay where they are; macOS may ask once before Tuck can read a folder.")
+            }
+            Spacer(minLength: 12)
+            Label("With two fingers on a trackpad, swipe down on \(place) to open Tuck, down again to see everything, and up to close it.",
+                  systemImage: "hand.draw")
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.bottom, 16)
+        }
+    }
+
+    private func row(_ move: SetupPractice.Move, title: String, symbol: String, detail: String) -> some View {
+        let done = setup.practice.done.contains(move)
+        return HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Image(systemName: done ? "checkmark.circle.fill" : symbol)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(done ? Color.accentColor : Color.secondary)
+                .frame(width: 18)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.system(size: 13, weight: .semibold))
+                Text(detail)
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .animation(.easeOut(duration: 0.2), value: done)
+        .accessibilityElement(children: .combine)
+        .accessibilityValue(done ? "done" : "not yet")
+    }
+}
+
+/// The finish: where Settings and the tutorial are, and open at login.
 struct DoneStep: View {
     @ObservedObject var setup: SetupModel
     @ObservedObject var settings: SettingsStore
 
-    /// On a Mac without a notch, Tuck is a small bubble in the middle of the menu bar.
-    private var hasNotch: Bool { NSScreen.screens.contains { $0.safeAreaInsets.top > 0 } }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             StepTitle(title: "You're set",
-                      detail: hasNotch ? "Tuck lives in the notch at the top of your screen. While it holds nothing, the notch looks as it always has."
-                                       : "Tuck lives in the middle of the menu bar, as a small bubble. It stays quiet until you use it.")
-            VStack(alignment: .leading, spacing: 12) {
-                line("Click it, or swipe down on it, to open Tuck.", symbol: "cursorarrow.click")
-                line("Drag files, links or text onto it to hold them.", symbol: "tray.and.arrow.down")
-                if settings.shortcutsEnabled {
-                    line("Press \(settings.shortcuts.shortcut(for: .tuckFrontWindow)?.title ?? "your shortcut") to tuck the window in front, from any app.",
-                         symbol: "keyboard")
-                } else if settings.menuBarIconShown {
-                    line("Tuck's menu-bar item can tuck the window in front, too.", symbol: "menubar.arrow.up.rectangle")
-                }
-                line("Change any of this in Settings, where you can also take this tour again.", symbol: "slider.horizontal.3")
-            }
-            .font(.system(size: 13))
-            .padding(.bottom, 24)
-
+                      detail: settings.menuBarIconShown
+                        ? "Open Settings from Tuck's menu-bar item. To practise again, choose Open Tutorial… in Settings › General."
+                        : "Open Settings with a secondary click along the top of Tuck's open fold. To practise again, choose Open Tutorial… in Settings › General.")
             Toggle("Open Tuck at login", isOn: $setup.openAtLogin)
                 .toggleStyle(.checkbox)
                 .disabled(!LoginItem.isAvailable)
@@ -340,16 +197,6 @@ struct DoneStep: View {
                     .foregroundStyle(.secondary)
                     .padding(.top, 4)
             }
-        }
-    }
-
-    private func line(_ text: String, symbol: String) -> some View {
-        Label {
-            Text(text).fixedSize(horizontal: false, vertical: true)
-        } icon: {
-            Image(systemName: symbol)
-                .foregroundStyle(Color.accentColor)
-                .frame(width: 20)
         }
     }
 }

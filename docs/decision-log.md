@@ -10,6 +10,80 @@ it the test Mac. An **Inspiration** note names an app whose behaviour gave Tuck 
 inspiration only: no code, assets or drawings were taken from any of these apps, and Tuck's version is
 written for Tuck.
 
+## 2026-11-19: Setup is three steps, done on the real Tuck
+
+- **Decision:**
+  - **Three steps, where there were six:** Allow Accessibility, Try it on the notch, and You're set. The
+    tutorial from Settings › General is Try it on the notch alone, with no progress dots. Back, Continue,
+    the dots, keyboard and VoiceOver access and the snapshots stay as they were. Nothing in setup moves
+    now: a tick and the grant fade in over 0.2 s, as the permission step's did, so Reduce Motion has
+    nothing to hold back.
+  - **The first step** opens with Tuck's mark, small, and one line on what Tuck is, then asks for
+    Accessibility: what Tuck reads about windows, and what it never reads. It still notices the grant,
+    and Continue still works without it.
+  - **The practice is the real Tuck.** Four moves tick off as Tuck does them, in any order and however
+    they were done: open Tuck, tuck a window, bring it back from its tile, and drop a file, link or text
+    onto the notch. `TuckModel.onPractice`, set only while setup is open, reports from the four places
+    that already do these: `expand`, `depositWindows`, the end of a restore, and a drop that was kept.
+    `SetupPractice` (TuckCore) decides what counts: a restore only when the window is back on screen,
+    and nothing tucked or dropped counts for nothing. What is tucked or dropped stays in Tuck afterwards.
+    On a display without a notch the step names the bubble and where to click it. Tuck doesn't tuck its
+    own windows, so the step says to click another app's window first, or Finder in the Dock. Without
+    Accessibility the tuck row says to press Allow Tuck in the fold, which is what the fold shows then.
+  - **The swipes are one line** under the moves. Tuck sees them on the real notch, and opening by swipe
+    ticks Open Tuck like any other way.
+  - **The last step** is Open Tuck at login and one line on where Settings and the tutorial are. With
+    the menu-bar item hidden it names the secondary click along the top of the open fold.
+  - **The window is 600 × 440 pt,** down from 840 × 600, so the notch and the windows the practice uses
+    stay in view beside it.
+  - **Removed, with their tests:** `SetupTour` (`TourDesk`, `TourLayout`) and its 18 tests;
+    `SetupDesk`, `SetupChoices` and `SetupGestures`; the welcome lockup, with the wordmark and lockup
+    geometry and the Ink and Paper colours in `TuckLogo`; and `TuckModel.performHaptic`, which only the
+    pretend screen called. The logo files in `design/logo` are unchanged; only the notes there about the
+    in-app wordmark went.
+  - **The steps that went, and why:**
+    - **Welcome:** the logo alone taught nothing to do. The mark and one line now open the first step.
+    - **How Tuck works:** a pretend screen with its own notch, window and PDF, which only setup had. The
+      practice does the same moves on the real notch.
+    - **Choose what you want:** six switches that Settings already has, at the same defaults: Widen
+      when a drag comes near (Held, under Drops), Show in menu bar (General), Use keyboard shortcuts
+      (Keyboard), Modifier-drag (Windows), Smooth scrolling (Mouse) and Clipboard history (Held). The
+      Haptic feedback switch above the tour went too; it stays in General.
+    - **Swipe on the notch:** a second pretend screen for three swipes, now one line about the real
+      notch.
+    - **Permissions:** Accessibility is the first step. File access stays out of setup: Full Disk Access
+      and Ask Now for the usual folders were already in Settings › Held › File access, and without
+      either, macOS asks about a folder the first time something is dropped from it.
+  - **The docs:** the README, guide, development notes, architecture, release notes and privacy policy
+    draft describe the new setup, and name Settings › Held for the folder prompts.
+- **Why:** I wanted setup cut to what teaches Tuck, and to feel like what Tuck actually does. The tour
+  taught the moves on a copy of Tuck that behaved like it but wasn't it, the choices repeated Settings,
+  and two of the six pages had nothing to do on them. Done on the real notch, the moves show where Tuck
+  is, and setup ends with something already in it.
+- **Checked:**
+  - `scripts/test.sh`: 395 tests in 48 suites pass (408, less the tour's 18, plus 5). The new suite
+    "Setup practice" checks the steps and the tutorial's; that moves tick off in any order and each
+    counts once; that only a window back on screen counts as brought back; and that nothing tucked or
+    dropped counts for nothing.
+  - `swift build` shows no warnings.
+  - `--snapshot-ui` renders each step and state in Light, Dark and both Increase Contrast appearances,
+    40 PNGs, and I looked at each: the first step before and after the grant; the practice untouched,
+    part done, all done and on the bubble; the finish with and without the menu-bar item; and the
+    tutorial. Nothing is clipped, and nothing names a removed step.
+  - The hooks against the code: every drop, promised files and images included, ends in
+    `deposit(_:at:)`; the Tuck button and the window picker both end in `depositWindows`; a swipe that
+    opens the fold goes through `expand`. Each sentence of the copy against the app: the fold's Allow
+    Tuck button, the bubble's click targets, the secondary click for Settings, and Open Tutorial… in
+    General.
+- **Not checked:** the app wasn't run on screen, so these are unseen: the moves ticking on the real
+  notch, the grant noticed on the first step, macOS's folder prompt on a drop, the Finder in the Dock
+  path, VoiceOver reading the rows, and whether the window gets in the way of the practice on a small
+  screen. The test Mac sends wheel events, so swipes can't be tried there. Off screen, the Increase
+  Contrast renders look the same as the standard ones, and the login checkbox shows as unavailable,
+  since a `swift run` has no bundle.
+- **Deferred:** setup doesn't teach the window picker, Arrange, Rest or the clipboard; the guide and
+  Settings cover them.
+
 ## 2026-11-19: Tuck's own bundle ID, real links in About, and a signature that stays the same
 
 - **Decision:**
@@ -376,6 +450,9 @@ numbers sit in a 14 pt gutter with no rule.
   draw the same views.
 
 ## 2026-11-09: The drop rim fades out before the screen's top edge
+
+**Superseded in part** by "2026-11-19: Setup is three steps, done on the real Tuck": setup no longer has
+a pretend notch, so what this says of it no longer applies.
 
 - **Decision:** the blue rim a drag brings up around the notch no longer runs along the top of the
   screen. The rim already left out the outline's top, but each shoulder (the 8 pt quarter circle where
@@ -845,6 +922,9 @@ kind wears badges, text and links included, with the app it came from last.
 
 ## 2026-11-08: The notch greets without opening, the fold is black, and tiles show only what they hold
 
+**Superseded in part** by "2026-11-19: Setup is three steps, done on the real Tuck": setup no longer has
+a tour, so what this says of its pretend notch and fold no longer applies.
+
 **Superseded in part** by "2026-11-09: Light cards, badges on every kind with the app's icon, the
 bubble's lone mark, and page pictures". The bubble on a display without a notch shows the mark alone,
 with no dot, and pointed at, the Tuck arrow takes the mark's place.
@@ -1120,6 +1200,9 @@ chips show before a search too.
     correctly, so only the snapshot is affected.
 
 ## 2026-11-08: One place, one fold: the simplification redesign
+
+**Superseded in part** by "2026-11-19: Setup is three steps, done on the real Tuck": setup has no tour
+or pretend notch, and no Haptic feedback switch; the switch is in Settings › General.
 
 **Superseded in part** by "2026-11-08: The notch greets without opening, the fold is black, and tiles
 show only what they hold". Pointing at Tuck opens nothing, on the notch and on the setup tour's: the
@@ -1445,6 +1528,9 @@ session.
 
 ## 2026-11-06: The trial counts 7 days of use; turning clipboard history off asks first
 
+**Superseded in part** by "2026-11-19: Setup is three steps, done on the real Tuck": setup has no Choose
+step, so the clipboard history switch, and its question, are in Settings › Held only.
+
 **Superseded in part** by "2026-11-16: No trial and no licence keys: every feature, for everyone": there
 is no trial. Turning clipboard history off still asks first.
 
@@ -1686,6 +1772,9 @@ trial and the licence keys are gone, and every feature works for everyone. Unins
     confirm it.
 
 ## 2026-11-05: Packaged for direct sale, as a signed and notarized DMG
+
+**Superseded in part** by "2026-11-19: Setup is three steps, done on the real Tuck": the folder prompts
+are brought up from Settings › Held, not setup. The usage strings are unchanged.
 
 - **Superseded in part:** licensing is no longer deferred, and `release.sh` also writes the zipped
   dSYM to `dist/`. See "Sellable: a seven-day trial, offline licence keys, and Uninstall" above.
@@ -2129,6 +2218,9 @@ Pointing no longer lights the line, and there is no card in the dip.
 
 ## 2026-11-04: The gesture step teaches three swipes
 
+**Superseded** by "2026-11-19: Setup is three steps, done on the real Tuck": there is no gesture step;
+the practice names the swipes in one line, for the real notch.
+
 - **Decision:** Swipe on the notch now teaches only Open (swipe down on the notch), Change page
   (sideways on the panel) and Close (up on the panel). Switch session, Tuck away and Bring back are
   gone from its chips, its instructions and its "what that did" line. On that step the closed notch
@@ -2147,6 +2239,10 @@ Pointing no longer lights the line, and there is no card in the dip.
   step shows three chips and its new lines.
 
 ## 2026-11-04: Setup opens on Tuck's logo alone
+
+**Superseded** by "2026-11-19: Setup is three steps, done on the real Tuck": setup opens on the
+Accessibility step, with Tuck's mark small at the top and one line on what Tuck is. The lockup and its
+animation are gone.
 
 - **Superseded in part:** the gesture step no longer teaches sessions; see "The gesture step teaches
   three swipes" above.
@@ -2205,6 +2301,9 @@ fold's left wing.
   tiles. Not tried by hand: the arrow rising in on a real notch, and Settings' token art.
 
 ## 2026-11-04: Pointed at, the notch keeps its logo; the Tuck button is tinted like the panel's
+
+**Superseded in part** by "2026-11-19: Setup is three steps, done on the real Tuck": setup no longer has
+a pretend notch, so what this says of it no longer applies.
 
 - **Superseded in part:** the Tuck button is no longer a tinted circle; it is a bare arrow in the
   logo's line. See "The notch's Tuck button is an arrow in the logo's line; space symbols drawn heavy"
@@ -2310,6 +2409,9 @@ and takes the place of the full fold's list until it is done or cancelled.
 
 ## 2026-11-04: Sessions as intentions, with symbols
 
+**Superseded in part** by "2026-11-19: Setup is three steps, done on the real Tuck": setup no longer has
+a tour, so its pretend notch's numbered sessions are no longer deferred.
+
 - **Superseded in part:** the symbols are outlines drawn heavy, no longer filled silhouettes at
   semibold. See "The notch's Tuck button is an arrow in the logo's line; space symbols drawn heavy"
   above.
@@ -2352,6 +2454,9 @@ and takes the place of the full fold's list until it is done or cancelled.
   choosing its symbol.
 
 ## 2026-11-04: A new logo, the notch line, lit with a card in the dip when a space holds something
+
+**Superseded in part** by "2026-11-19: Setup is three steps, done on the real Tuck": setup no longer has
+a tour, so what this says of its notch no longer applies.
 
 - **Superseded in part:** the line is no longer lit while a space holds something; it is faint at rest
   and lit while pointed at, and the card alone shows that a space holds something. See "The notch's line
@@ -2530,6 +2635,9 @@ tucked, and still asks first, inline ("Restore all N windows?", with Restore N a
   Mission Control shows parked windows); Stage Manager; a click on the sliver itself.
 ## 2026-11-04: Ready for macOS 26 (Liquid Glass) and macOS 27
 
+**Superseded in part** by "2026-11-19: Setup is three steps, done on the real Tuck": setup's window is
+600 × 440 pt, not 840 × 600, which is the size to check with Tahoe's taller controls.
+
 **Superseded in part** by "2026-11-08: One place, one fold: the simplification redesign". The held-back
 clipboard guidance is a card in the fold, not on a Clipboard page, and the open fold follows Light or
 Dark rather than staying black, still with no Liquid Glass.
@@ -2602,6 +2710,9 @@ no Tuck button when pointed at: a faint mark while Tuck is empty, the mark and c
 - **Checked:** `swift build`, `scripts/test.sh`, and `git diff --check`.
 
 ## 2026-11-04: File access explained in setup
+
+**Superseded in part** by "2026-11-19: Setup is three steps, done on the real Tuck": setup no longer
+offers file access. Both routes are in Settings › Held › File access, unchanged.
 
 - **Decision:** Setup offers Full Disk Access for files from any location, and a lower-friction route
   that asks macOS for Desktop, Documents, Downloads and iCloud Drive. Full Disk Access cannot be
@@ -2694,6 +2805,9 @@ no Tuck button when pointed at: a faint mark while Tuck is empty, the mark and c
   dot's or circle's size, without a number).
 
 ## 2026-11-04: A smooth way back into the notch, a Tuck button on the notch, a Clipboard page
+
+**Superseded in part** by "2026-11-19: Setup is three steps, done on the real Tuck": setup no longer has
+a tour, so what this says of its pretend notch and panel no longer applies.
 
 - **Superseded in part:** the drop outlines are now the surface's outline without its top, for the
   open panel too, not a mask and a SwiftUI rim. See "The worktrees merged into one build" above. Since
@@ -2893,6 +3007,9 @@ setting too.
 
 ## 2026-11-04: Setup: one working pretend screen
 
+**Superseded** by "2026-11-19: Setup is three steps, done on the real Tuck": there is no pretend screen;
+setup's practice uses the real notch.
+
 - **Why:** the first run in a real window found four problems. The pretend screen's notch sat on the
   frame's border and looked like it poked out of it; the practice notch on the gesture step was a
   picture (its pages, rows and items did nothing); the window's tuck swapped a dark card in for the
@@ -2987,6 +3104,10 @@ setting too.
 - **Kept:** every feature, interaction and animation token. The muted palette, the Light/Dark panel, the
   plain page tabs and the one-tap ×, and the Settings sidebar are unchanged.
 ## 2026-11-03: Setup and tutorial
+
+**Superseded** by "2026-11-19: Setup is three steps, done on the real Tuck": setup is Allow
+Accessibility, Try it on the notch and You're set, done on the real Tuck in a 600 × 440 pt window, and
+the tutorial is the practice alone. There is no welcome, tour, choices or gesture step.
 
 - **Superseded in part:** the Welcome step no longer has a title or lines; it is Tuck's logo alone. See
   "Setup opens on Tuck's logo alone" above.

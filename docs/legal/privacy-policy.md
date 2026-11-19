@@ -79,9 +79,9 @@ your own files.
   Screen Recording permission.
 - **Files you drop.** Tuck reads them to show their thumbnail, kind and size, and to follow them if they
   move. Thumbnails are made by macOS on your Mac.
-- **Folders, for macOS's prompts.** If you choose Just the Usual Folders in setup, Tuck lists the
-  contents of your Desktop, Documents, Downloads and iCloud Drive folders once, which is what makes
-  macOS ask you about each. It does not keep the listing.
+- **Folders, for macOS's prompts.** If you choose Ask Now under File access in Settings › Held, Tuck
+  lists the contents of your Desktop, Documents, Downloads and iCloud Drive folders once, which is what
+  makes macOS ask you about each. It does not keep the listing.
 - **Whether it has Full Disk Access.** To see whether you have granted it, Tuck opens macOS's own
   privacy database file and closes it at once, without reading it.
 - **What you drag.** Tuck notices when the left mouse button goes down, drags and comes up, in any app.

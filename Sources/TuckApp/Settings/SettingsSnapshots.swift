@@ -4,10 +4,11 @@ import SwiftUI
 import TuckCore
 
 /// `Tuck --snapshot-ui <folder>` (debug builds): renders every Settings pane, in Light, Dark and both
-/// Increase Contrast appearances, with the switches off and on, and every setup step, to PNGs off screen, so layouts can be checked without
-/// opening a window. Uses a throwaway defaults suite and library, both removed afterwards; the person's
-/// own are never read. About is also rendered at full length (`settings-about-full-…`), and the prompt
-/// for turning clipboard history off with two items saved (`settings-held-turn-off-…`).
+/// Increase Contrast appearances, with the switches off and on, and every setup step and its states, to
+/// PNGs off screen, so layouts can be checked without opening a window. Uses a throwaway defaults suite
+/// and library, both removed afterwards; the person's own are never read. About is also rendered at full
+/// length (`settings-about-full-…`), and the prompt for turning clipboard history off with two items
+/// saved (`settings-held-turn-off-…`).
 ///
 /// Known artifact: the transparent title-bar strip renders white off screen, so a dark pane header can
 /// look blank here. Check that in a real window.
@@ -136,70 +137,49 @@ enum SettingsSnapshots {
         )
     }
 
-    /// Every setup step, numbered in order, then the tour and the practice notch part-way through.
+    /// Every setup step, numbered in order, then each state a step can show: Accessibility allowed; the
+    /// practice with nothing, some and everything done, and on a bubble; the finish with the menu-bar item
+    /// hidden; and the tutorial. Steps show the notch unless a shot says otherwise.
     private static func renderSetup(settings: SettingsStore, model: TuckModel, appearance: NSAppearance.Name,
                                     suffix: String, to output: URL) {
-        func shot(_ name: String, tutorial: Bool = false, _ configure: (SetupModel) -> Void) {
+        func shot(_ name: String, tutorial: Bool = false, trusted: Bool = false, _ configure: (SetupModel) -> Void) {
+            model.accessibilityChanged(trusted: trusted)
+            defer { model.accessibilityChanged(trusted: false) }
             let setup = SetupModel(settings: settings, app: model, tutorialOnly: tutorial)
+            setup.hasNotch = true
             configure(setup)
-            // The welcome's lockup draws itself in, so it is left to finish.
             save(SetupView(setup: setup), size: SetupWindowController.size, settingsTitleBar: false,
-                 settle: setup.step == .welcome ? 1.5 : 0.3,
                  appearance: appearance, to: output.appendingPathComponent("setup-\(name)-\(suffix).png"))
         }
-        for step in SetupModel.Step.allCases {
+        for step in SetupStep.allCases {
             shot("\(step.rawValue)-\(step)") { $0.step = step }
         }
-        shot("4-permission-folders") { setup in
-            setup.step = .permission
-            setup.hasFullDiskAccess = false
-            setup.folderAnswers = Dictionary(uniqueKeysWithValues: FileAccess.Folder.present.enumerated().map {
-                ($0.element, $0.offset.isMultiple(of: 2))
-            })
+        shot("accessibility-allowed", trusted: true) { $0.step = .accessibility }
+        shot("practice-start", trusted: true) { $0.step = .practice }
+        shot("practice-part", trusted: true) { setup in
+            setup.step = .practice
+            setup.practice.record(.opened)
+            setup.practice.record(.tucked(count: 1))
         }
-        shot("tour-open") { setup in
-            setup.step = .tour
-            setup.desk.open()
+        shot("practice-all", trusted: true) { setup in
+            setup.step = .practice
+            for event in [SetupPractice.Event.opened, .tucked(count: 1), .restored(.moved), .dropped(count: 1)] {
+                setup.practice.record(event)
+            }
         }
-        shot("tour-tucked") { setup in
-            setup.step = .tour
-            setup.desk.open()
-            setup.desk.tuckWindow()
-            setup.desk.holdFile()
+        shot("practice-bubble", trusted: true) { setup in
+            setup.step = .practice
+            setup.hasNotch = false
+            setup.practice.record(.opened)
         }
-        // Closed, holding the window: the mark and its count on the notch's wings.
-        shot("tour-holding") { setup in
-            setup.step = .tour
-            setup.desk.open()
-            setup.desk.tuckWindow()
-            setup.desk.close()
+        shot("done-no-menu-bar") { setup in
+            setup.step = .done
+            settings.menuBarIconShown = false
         }
-        shot("tour-attached") { setup in
-            setup.step = .tour
-            setup.desk.holdFile()
-            setup.desk.open()
-            setup.desk.attachFile()
-        }
-        shot("gestures-tucked-away") { setup in
-            setup.step = .gestures
-            setup.desk.holdFile()
-            setup.desk.apply(.tuckAway)
-        }
-        shot("gestures-open") { setup in
-            setup.step = .gestures
-            setup.desk.holdFile()
-            setup.desk.apply(.expand)
-        }
-        shot("gestures-full") { setup in
-            setup.step = .gestures
-            setup.desk.holdFile()
-            setup.desk.apply(.expand)
-            setup.desk.apply(.unfold)
-        }
-        shot("tutorial-first", tutorial: true) { _ in }
+        settings.menuBarIconShown = true
+        shot("tutorial", tutorial: true, trusted: true) { _ in }
     }
 
-    /// Hosted the way the real window hosts it, title bar and all, so the header sits where it will.
     private static func save<V: View>(_ view: V, size: CGSize? = nil, settingsTitleBar: Bool = true,
                                       settle: TimeInterval = 0.3, appearance: NSAppearance.Name, to url: URL) {
         let window = NSWindow(contentRect: CGRect(origin: .zero, size: size ?? SettingsView.size),

@@ -128,8 +128,7 @@ def arc_stroke(cx, cy, r, a1, a2, sweep, large=0):
             f"{arc(ri, 1 - sweep, *i1, large)} {arc(HW, sweep, *o1)} Z")
 
 
-# Joined strokes are single contours, so there is no seam or cap bump where they meet. TuckLogo.swift's
-# wordmarkPath strokes the same centre lines; keep the two in step.
+# Joined strokes are single contours, so there is no seam or cap bump where they meet.
 T_STEM = "M32 58 V136 A40 40 0 0 0 72 176 H80 A12 12 0 0 0 80 152 H72 A16 16 0 0 1 56 136 V58 A12 12 0 0 0 32 58 Z"
 # The bowl stops 8° short of the right stem's edge, inside the stem, so the two never share an edge.
 U_BOWL = ("M100 100 V128 A48 48 0 0 0 195.53 134.68 L171.77 131.34 A24 24 0 0 1 124 128 V100 "

@@ -6,10 +6,10 @@ import AppKit
 /// thumbnail, kind and size and to follow it if it moves, so without these, a drop from a new place
 /// stops for a prompt.
 ///
-/// Setup covers them up front. Full Disk Access covers every place at once and never prompts; no app can
-/// ask for it, so it is switched on in System Settings. The folders can instead be asked for now, one
-/// prompt each. External and network drives can only be asked about once one is connected, so Full Disk
-/// Access is the only way to cover them in advance.
+/// Settings › Held covers them up front. Full Disk Access covers every place at once and never prompts;
+/// no app can ask for it, so it is switched on in System Settings. The folders can instead be asked for
+/// now, one prompt each. External and network drives can only be asked about once one is connected, so
+/// Full Disk Access is the only way to cover them in advance.
 enum FileAccess {
     enum Folder: String, CaseIterable, Identifiable, Sendable {
         case desktop, documents, downloads, iCloudDrive
