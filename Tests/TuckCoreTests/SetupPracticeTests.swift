@@ -14,22 +14,18 @@ struct SetupPracticeTests {
 
     @Test func theMovesAreTickedOffInAnyOrderAndEachCountsOnce() {
         var practice = SetupPractice()
-        #expect(practice.next == .open)
+        #expect(practice.done.isEmpty)
         let dropped = practice.record(.dropped(count: 1))
         #expect(dropped)
-        #expect(practice.next == .open)
+        #expect(practice.done == [.drop])
         let opened = practice.record(.opened)
         let openedAgain = practice.record(.opened)
         #expect(opened && !openedAgain)
-        #expect(practice.next == .tuck)
+        #expect(practice.done == [.drop, .open])
         let tucked = practice.record(.tucked(count: 2))
         #expect(tucked)
-        #expect(practice.next == .bringBack)
-        #expect(!practice.isComplete)
         let restored = practice.record(.restored(.moved))
         #expect(restored)
-        #expect(practice.isComplete)
-        #expect(practice.next == nil)
         #expect(practice.done == Set(SetupPractice.Move.allCases))
     }
 

@@ -13,8 +13,9 @@ final class SetupModel: ObservableObject {
     /// The moves done on the real notch, as TuckModel reports them.
     @Published var practice = SetupPractice()
     @Published var openAtLogin: Bool
-    /// On a Mac without a notch, Tuck is a small bubble in the middle of the menu bar.
-    var hasNotch = NSScreen.screens.contains { $0.safeAreaInsets.top > 0 }
+    /// On a Mac without a notch, Tuck is a small bubble in the middle of the menu bar, unless Settings ›
+    /// Notch draws a notch there instead.
+    var hasNotch: Bool
 
     let settings: SettingsStore
     let app: TuckModel
@@ -26,6 +27,7 @@ final class SetupModel: ObservableObject {
         isTutorial = tutorialOnly
         steps = SetupStep.steps(tutorialOnly: tutorialOnly)
         step = steps[0]
+        hasNotch = settings.notchlessStyle == .notch || NSScreen.screens.contains { $0.safeAreaInsets.top > 0 }
         // On by default the first time; afterwards, whatever the system's login items say.
         openAtLogin = LoginItem.isAvailable
             && (LoginItem.isEnabled || !UserDefaults.standard.bool(forKey: Self.completedKey))

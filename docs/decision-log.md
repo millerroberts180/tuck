@@ -27,7 +27,8 @@ written for Tuck.
     that already do these: `expand`, `depositWindows`, the end of a restore, and a drop that was kept.
     `SetupPractice` (TuckCore) decides what counts: a restore only when the window is back on screen,
     and nothing tucked or dropped counts for nothing. What is tucked or dropped stays in Tuck afterwards.
-    On a display without a notch the step names the bubble and where to click it. Tuck doesn't tuck its
+    On a display without a notch the step names the bubble and where to click it, unless Settings ›
+    Notch draws a notch there. Tuck doesn't tuck its
     own windows, so the step says to click another app's window first, or Finder in the Dock. Without
     Accessibility the tuck row says to press Allow Tuck in the fold, which is what the fold shows then.
   - **The swipes are one line** under the moves. Tuck sees them on the real notch, and opening by swipe

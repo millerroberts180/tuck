@@ -45,7 +45,7 @@ launch until it is finished.
 | Step | What happens |
 | --- | --- |
 | Allow Accessibility | Tuck's mark and what Tuck is, in a line, then the one permission tucking needs: what Tuck reads about windows and what it never reads. Open System Settings… asks for it; the page notices when you turn Tuck on. Continue works without it |
-| Try it on the notch | Four moves, each ticked off when Tuck does it, however you did it: open Tuck, tuck a window, bring it back from its tile, and drop a file, link or text onto the notch. On a display without a notch the step is "Try it in the menu bar" and points at the bubble. A line below names the two-finger swipes |
+| Try it on the notch | Four moves, each ticked off when Tuck does it, however you did it: open Tuck, tuck a window, bring it back from its tile, and drop a file, link or text onto the notch. On a display without a notch the step is "Try it in the menu bar" and points at the bubble, unless Settings › Notch draws a notch there. A line below names the two-finger swipes |
 | You're set | Where Settings and the tutorial are, and Open Tuck at login (on by default the first time) |
 
 Nothing in setup is a copy of Tuck: the moves are the real ones, so a window you tuck or a file you

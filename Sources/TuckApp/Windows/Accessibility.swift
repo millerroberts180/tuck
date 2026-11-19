@@ -14,7 +14,7 @@ enum AX {
     private(set) static var hasPrompted = false
 
     /// Shows the system prompt that leads to Accessibility settings, at most once per launch and only
-    /// from a deliberate action (setup's permission step is one); after that the fold's Allow Tuck
+    /// from a deliberate action (setup's first step is one); after that the fold's Allow Tuck
     /// button and status line explain it.
     static func promptForTrust() {
         guard !hasPrompted else { return }

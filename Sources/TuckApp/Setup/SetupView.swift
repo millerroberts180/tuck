@@ -147,7 +147,7 @@ struct PracticeStep: View {
                     detail: "Drag a file, link or text onto \(place). Files stay where they are; macOS may ask once before Tuck can read a folder.")
             }
             Spacer(minLength: 12)
-            Label("With two fingers on a trackpad, swipe down on \(place) to open Tuck, down again to see everything, and up to close it.",
+            Label("With two fingers on a trackpad, swipe down on \(place) to open Tuck, down again to see everything, and up to go back.",
                   systemImage: "hand.draw")
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)

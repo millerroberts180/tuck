@@ -45,10 +45,6 @@ public struct SetupPractice: Equatable, Sendable {
 
     public init() {}
 
-    /// The first move not done yet; nil once all are.
-    public var next: Move? { Move.allCases.first { !done.contains($0) } }
-    public var isComplete: Bool { next == nil }
-
     /// Ticks off the move an event stands for; whether it was new.
     @discardableResult
     public mutating func record(_ event: Event) -> Bool {
