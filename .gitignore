@@ -1,0 +1,49 @@
+# macOS
+.DS_Store
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# Build output
+build/
+dist/
+DerivedData/
+
+# Xcode
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+
+# Credentials and signing material
+.env
+.env.*
+*.pem
+*.p8
+*.p12
+*.cer
+*.key
+*.mobileprovision
+*.provisionprofile
+credentials.json
+secrets/
+
+# Local MCP / tool configuration
+.mcp.json
+mcp.json
+.vscode/mcp.json
+.cursor/mcp.json
+
+# Screenshots and screen recordings
+screenshots/
+Screenshot*.png
+Screen Shot*.png
+Screen Recording*.mov
+
+# Local research artifacts
+research/
+artifacts/
+
+# Local tool state (kept on this Mac, never committed)
+.memory/

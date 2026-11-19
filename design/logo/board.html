@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tuck Logo Board</title>
+<link rel="stylesheet" href="web/tokens.css">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 23px 32px; background: #E9ECF0; color: var(--tuck-ink); font: 13px/1.4 var(--font); }
+  h1 { font: 600 22px/1.2 var(--font-display); margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { color: #5E6878; margin: 0 0 20px; }
+  .label { font-size: 11px; color: #5E6878; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+  .row { display: grid; gap: 14px; margin-bottom: 14px; }
+  .r1 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .r2 { grid-template-columns: 1.6fr 1fr; }
+  .tile { border-radius: 14px; padding: 16px; background: #fff; }
+  .mark { display: flex; align-items: center; justify-content: center; height: 200px; }
+  .mark img { height: 180px; }
+  .paper { background: var(--tuck-paper); } .night { background: var(--tuck-night); }
+  .night .label { color: #8A94A3; }
+  .site { border-radius: 14px; overflow: hidden; background: var(--tuck-paper); border: 1px solid #DDE2E9; }
+  .nav { display: flex; align-items: center; justify-content: space-between; padding: 14px 22px;
+         border-bottom: 1px solid #DDE2E9; background: rgba(255,255,255,.6); }
+  .nav img { height: 28px; display: block; }
+  .links { display: flex; gap: 22px; align-items: center; color: #5E6878; }
+  .btn { background: var(--tuck-ink); color: #fff; border-radius: 999px; padding: 7px 14px; font-weight: 500; }
+  .hero { display: grid; grid-template-columns: 1.3fr 1fr; align-items: center; padding: 28px 34px 32px; gap: 20px; }
+  .hero h2 { font: 650 34px/1.08 var(--font-display); letter-spacing: -0.02em; margin: 0 0 10px; }
+  .hero p { color: #5E6878; font-size: 15px; margin: 0 0 18px; max-width: 34ch; }
+  .cta { display: inline-flex; gap: 12px; align-items: center; } .ghost { color: var(--tuck-blue-ink); font-weight: 500; }
+  .art { display: flex; justify-content: center; } .art img { height: 190px; }
+  .site.dark { background: var(--tuck-night); border-color: #232833; }
+  .site.dark .nav { background: rgba(255,255,255,.03); border-color: #232833; }
+  .site.dark .links, .site.dark .hero p { color: #9AA4B2; }
+  .site.dark .btn { background: var(--tuck-paper); color: var(--tuck-ink); }
+  .site.dark .hero h2 { color: var(--tuck-paper); } .site.dark .ghost { color: var(--tuck-blue); }
+  .tabbar { background: #DADFE6; border-radius: 10px 10px 0 0; padding: 8px 10px 0; display: flex; gap: 6px; }
+  .tab { background: #fff; border-radius: 8px 8px 0 0; padding: 7px 12px; display: flex; gap: 8px; align-items: center; font-size: 12px; min-width: 150px; }
+  .tab.off { background: transparent; color: #5E6878; } .tab img { width: 16px; height: 16px; }
+  .menubar { margin-top: 12px; height: 26px; border-radius: 8px; background: #F6F7F9; display: flex;
+             align-items: center; justify-content: flex-end; gap: 16px; padding: 0 12px; position: relative; }
+  .menubar img { height: 18px; } .menubar.dark { background: #1C1F25; color: #E8EAED; }
+  .notch { position: absolute; left: 50%; top: 0; transform: translateX(-50%); width: 150px; height: 26px;
+           background: #000; border-radius: 0 0 10px 10px; }
+  .sessions { display: flex; gap: 14px; align-items: center; } .sessions img { height: 64px; }
+  .notches { display: flex; gap: 22px; align-items: center; justify-content: center; height: 200px; }
+  .notches figure { margin: 0; text-align: center; color: #8A94A3; font-size: 12px; }
+  .pill { width: 176px; height: 60px; background: #000; border-radius: 0 0 24px 24px; display: flex;
+          align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 0 0 1px #2A303B;
+          margin-bottom: 10px; }
+  .pill img { height: 76px; } .pill .dim { opacity: .32; }
+  .lockups { display: flex; gap: 26px; align-items: center; justify-content: center; height: 200px; }
+  .lockups .h { height: 64px; } .lockups .s { height: 150px; }
+</style>
+</head>
+<body>
+  <h1>Tuck logo</h1>
+  <p class="sub">One line: the top edge of the screen dipping round the notch. On the notch it rests faint, lights when pointed at, and holds a card in its dip while Tuck holds something.</p>
+
+  <div class="row r1">
+    <div class="tile paper"><div class="label">Symbol</div><div class="mark"><img src="svg/tuck-symbol.svg" alt=""></div></div>
+    <div class="tile night"><div class="label">On the notch: empty, holding</div><div class="notches">
+      <figure><div class="pill"><img class="dim" src="svg/tuck-symbol-small.svg" alt=""></div>Empty</figure>
+      <figure><div class="pill"><img src="svg/tuck-notch-holding.svg" alt=""></div>Holding</figure></div></div>
+    <div class="tile"><div class="label">One colour</div><div class="mark"><img src="svg/tuck-symbol-black.svg" alt=""></div></div>
+    <div class="tile"><div class="label">App icon</div><div class="mark"><img src="source/appicon.svg" alt="" style="height:200px"></div></div>
+  </div>
+
+  <div class="row r2">
+    <div class="site">
+      <div class="nav"><img src="svg/tuck-logo-horizontal.svg" alt="Tuck">
+        <div class="links"><span>How it works</span><span>Privacy</span><span class="btn">Download for Mac</span></div></div>
+      <div class="hero">
+        <div><h2>Clear the desk.<br>Keep your place.</h2>
+          <p>Windows, files, links and notes, kept in your notch until you want them.</p>
+          <div class="cta"><span class="btn">Download for Mac</span><span class="ghost">See how it works →</span></div></div>
+        <div class="art"><img src="source/appicon.svg" alt=""></div>
+      </div>
+    </div>
+    <div class="tile">
+      <div class="label">Lockups</div>
+      <div class="lockups"><img class="h" src="svg/tuck-logo-horizontal.svg" alt=""><img class="s" src="svg/tuck-logo-stacked.svg" alt=""></div>
+    </div>
+  </div>
+
+  <div class="row r2">
+    <div class="site dark">
+      <div class="nav"><img src="svg/tuck-logo-horizontal-reversed.svg" alt="Tuck">
+        <div class="links"><span>How it works</span><span>Privacy</span><span class="btn">Download for Mac</span></div></div>
+      <div class="hero">
+        <div><h2>Clear the desk.<br>Keep your place.</h2>
+          <p>Windows, files, links and notes, kept in your notch until you want them.</p>
+          <div class="cta"><span class="btn">Download for Mac</span><span class="ghost">See how it works →</span></div></div>
+        <div class="art"><img src="source/appicon.svg" alt=""></div>
+      </div>
+    </div>
+    <div class="tile">
+      <div class="label">Favicon and menu bar (small cut)</div>
+      <div class="tabbar"><div class="tab"><img src="svg/tuck-symbol-small.svg" alt="">Tuck</div><div class="tab off">New Tab</div></div>
+      <div class="menubar"><div class="notch"></div><img src="svg/tuck-symbol-small-black.svg" alt=""><span>Tue 9:41</span></div>
+      <div class="menubar dark"><div class="notch"></div><img src="svg/tuck-symbol-small-white.svg" alt=""><span>Tue 9:41</span></div>
+      <div class="label" style="margin-top:16px">The line in Tuck's colours, one at a time</div>
+      <div class="sessions">
+        <img src="svg/tuck-symbol.svg" alt=""><img src="svg/tuck-symbol-purple.svg" alt=""><img src="svg/tuck-symbol-green.svg" alt="">
+        <img src="svg/tuck-symbol-orange.svg" alt=""><img src="svg/tuck-symbol-rose.svg" alt=""><img src="svg/tuck-symbol-teal.svg" alt="">
+      </div>
+    </div>
+  </div>
+</body>
+</html>

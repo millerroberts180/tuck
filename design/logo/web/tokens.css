@@ -1,0 +1,44 @@
+/* Tuck colour and type tokens for the website. Tuck Blue is the app's own (TuckLogo.blue in
+   Sources/TuckApp/App/TuckLogo.swift), so the site, the logo and the app read as one product. */
+
+:root {
+  /* Brand */
+  --tuck-ink: #1D2430;        /* text, the wordmark, the app icon's line, primary buttons */
+  --tuck-blue: #7299C5;       /* Tuck Blue: the logo's line, the app icon's tile, accents */
+  --tuck-blue-ink: #42658B;   /* Tuck Blue as text or links on light backgrounds */
+  --tuck-paper: #F4F6F9;      /* light page background */
+  --tuck-night: #111418;      /* dark page background */
+
+  /* Tuck's other colours: one at a time, for the logo's line, tags and illustrations. --tuck-amber is
+     the logo's orange; the name is kept so pages that use it don't break. */
+  --tuck-rose: #CD8E91;
+  --tuck-amber: #D9AA69;
+  --tuck-green: #7FAB94;
+  --tuck-purple: #A48BC7;
+  --tuck-teal: #7DAAB2;
+
+  /* Roles */
+  --bg: var(--tuck-paper);
+  --text: var(--tuck-ink);
+  --text-secondary: #5E6878;
+  --link: var(--tuck-blue-ink);
+  --line: #DDE2E9;
+  --button-bg: var(--tuck-ink);
+  --button-text: #FFFFFF;
+
+  /* The system font, as in the app */
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: var(--tuck-night);
+    --text: var(--tuck-paper);
+    --text-secondary: #9AA4B2;
+    --link: var(--tuck-blue);
+    --line: #232833;
+    --button-bg: var(--tuck-paper);
+    --button-text: var(--tuck-ink);
+  }
+}

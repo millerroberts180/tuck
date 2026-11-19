@@ -1,0 +1,111 @@
+DRAFT FOR LEGAL REVIEW. NOT IN FORCE.
+This draft has not been reviewed by a lawyer. Text in [square brackets] is a placeholder to be
+completed before Tuck is released.
+
+TUCK END USER LICENCE AGREEMENT
+Version [1.0], last updated [date]
+
+This End User Licence Agreement ("Agreement") is between you and [LICENSOR: owner's full legal name,
+or the business that publishes Tuck, and its address] ("we", "us"). It covers the Tuck software for
+macOS, its documentation and any updates we provide for it (together, "Tuck").
+
+By installing, copying or using Tuck, you agree to this Agreement. If you do not agree, do not install
+or use Tuck.
+
+1. LICENCE
+
+1.1 We grant you a personal, non-exclusive, non-transferable licence, free of charge, to install and
+use Tuck on Macs that you own or control.
+
+1.2 You may make one copy of Tuck for backup.
+
+2. RESTRICTIONS
+
+Except as this Agreement allows, or as applicable law permits despite this restriction, you may not:
+  (a) copy, sell, rent, lease, lend, sublicense or otherwise distribute Tuck;
+  (b) reverse engineer, decompile or disassemble Tuck;
+  (c) modify Tuck, or remove or change any notice of ownership in it;
+  (d) bypass or interfere with its code signature.
+
+3. OWNERSHIP
+
+Tuck is licensed, not sold. We, and our licensors if any, keep all rights, title and interest in Tuck,
+including its copyright, trademarks and other intellectual property. Any rights not expressly granted
+to you are reserved.
+
+4. WHAT TUCK DOES ON YOUR MAC
+
+4.1 Tuck works with other apps' windows and with files you give it. With your permission, it moves,
+resizes, hides and minimises other apps' windows through macOS's Accessibility features, and it reads
+files you drop on it. If you turn on Rest (experimental, off by default), Tuck pauses and resumes other
+apps' processes when you ask it to.
+
+4.2 You are responsible for the permissions you grant, for the apps you let Tuck act on, and for
+keeping backups of your work. Tuck keeps references to your files and does not move or delete them,
+but you should not rely on Tuck as your only copy of anything.
+
+5. PRIVACY
+
+Our privacy policy at [privacy policy URL] explains what Tuck stores and what it does not. In short,
+Tuck keeps what it holds on your Mac and does not send it to us.
+
+6. UPDATES AND SUPPORT
+
+We are not required to provide updates, upgrades or support. If we do provide an update, this
+Agreement applies to it unless it comes with its own terms. Support, if offered, is at [support email
+or URL].
+
+7. NO WARRANTY
+
+TO THE FULLEST EXTENT PERMITTED BY LAW, TUCK IS PROVIDED "AS IS" AND "AS AVAILABLE", WITH ALL FAULTS
+AND WITHOUT WARRANTY OF ANY KIND. WE DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING ANY IMPLIED
+WARRANTIES OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A PARTICULAR PURPOSE, ACCURACY, QUIET
+ENJOYMENT AND NON-INFRINGEMENT. WE DO NOT WARRANT THAT TUCK WILL MEET YOUR NEEDS, WORK WITH EVERY APP
+OR VERSION OF MACOS, OR RUN WITHOUT INTERRUPTION OR ERROR.
+
+Some jurisdictions do not allow these exclusions, so some of them may not apply to you. Nothing in
+this Agreement limits rights you have as a consumer that cannot be limited by contract.
+
+8. LIMITATION OF LIABILITY
+
+TO THE FULLEST EXTENT PERMITTED BY LAW, WE WILL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+CONSEQUENTIAL OR PUNITIVE DAMAGES, OR FOR ANY LOSS OF DATA, WORK, PROFITS OR GOODWILL, ARISING FROM
+YOUR USE OF OR INABILITY TO USE TUCK, EVEN IF WE HAVE BEEN TOLD SUCH DAMAGES ARE POSSIBLE. OUR TOTAL
+LIABILITY UNDER THIS AGREEMENT IS LIMITED TO [AMOUNT].
+
+Nothing in this Agreement excludes or limits liability that cannot be excluded or limited by law,
+such as liability for death or personal injury caused by negligence, or for fraud.
+
+9. TERMINATION
+
+This Agreement lasts until it ends. Your rights under it end automatically if you break any of its
+terms. When it ends, you must stop using Tuck and delete every copy of it. Sections 3, 7, 8, 10 and 11
+continue after it ends.
+
+10. EXPORT
+
+You may not use, export or re-export Tuck in breach of United States or other applicable export laws
+and sanctions.
+
+11. GENERAL
+
+11.1 This Agreement is governed by the laws of [jurisdiction], without regard to its conflict of laws
+rules. The courts of [jurisdiction] have exclusive jurisdiction, unless the law where you live gives
+you the right to bring a claim where you live.
+
+11.2 This Agreement is the entire agreement between you and us about Tuck, and replaces any earlier
+understanding. If any part of it is held unenforceable, that part is limited to the minimum extent
+needed and the rest stays in effect. If we do not enforce a term, that is not a waiver of it.
+
+11.3 You may not transfer this Agreement or your licence without our written consent. We may transfer
+it to a successor of the business that publishes Tuck.
+
+11.4 Apple, Mac and macOS are trademarks of Apple Inc. Tuck is not made or endorsed by Apple.
+
+12. CONTACT
+
+[LICENSOR: owner's full legal name or business]
+[Postal address]
+[Support email]
+
+© 2026 [owner's full legal name or business]. All rights reserved.

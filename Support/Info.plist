@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleExecutable</key>
+	<string>Tuck</string>
+	<key>CFBundleIdentifier</key>
+	<string>app.tuck.prototype</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>Tuck</string>
+	<key>CFBundleDisplayName</key>
+	<string>Tuck</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.productivity</string>
+	<key>LSArchitecturePriority</key>
+	<array>
+		<string>arm64</string>
+	</array>
+	<key>LSMinimumSystemVersion</key>
+	<string>14.0</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>LSMultipleInstancesProhibited</key>
+	<true/>
+	<key>NSDesktopFolderUsageDescription</key>
+	<string>Tuck holds the files you drop on it. It reads the ones from your Desktop to show a preview, follow them if they move and send them on when you drag them out.</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>Tuck holds the files you drop on it. It reads the ones from your Documents folder to show a preview, follow them if they move and send them on when you drag them out.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>Tuck holds the files you drop on it. It reads the ones from your Downloads folder to show a preview, follow them if they move and send them on when you drag them out.</string>
+	<key>NSFileProviderDomainUsageDescription</key>
+	<string>Tuck holds the files you drop on it. It reads the ones from iCloud Drive and other cloud folders to show a preview, follow them if they move and send them on when you drag them out.</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSHumanReadableCopyright</key>
+	<string>© 2026 Miller Roberts</string>
+	<key>NSNetworkVolumesUsageDescription</key>
+	<string>Tuck holds the files you drop on it. It reads the ones from network drives to show a preview, follow them if they move and send them on when you drag them out.</string>
+	<key>NSRemovableVolumesUsageDescription</key>
+	<string>Tuck holds the files you drop on it. It reads the ones from external drives to show a preview, follow them if they move and send them on when you drag them out.</string>
+	<key>NSSupportsSuddenTermination</key>
+	<true/>
+	<key>TuckEULAURL</key>
+	<string>https://tuck.example/eula</string>
+	<key>TuckPrivacyPolicyURL</key>
+	<string>https://tuck.example/privacy</string>
+	<key>TuckSupportEmail</key>
+	<string>support@tuck.example</string>
+	<key>TuckSupportURL</key>
+	<string></string>
+	<key>TuckWebsiteURL</key>
+	<string>https://tuck.example</string>
+</dict>
+</plist>
