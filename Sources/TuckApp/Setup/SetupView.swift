@@ -76,11 +76,9 @@ struct StepTitle: View {
     }
 }
 
-/// Tuck's line as a shape, its dip at a reach (see `TuckLogo.linePath`), for a square frame.
+/// Tuck's line as a shape (see `TuckLogo.linePath`), for a square frame.
 struct LogoLine: Shape {
-    var reach: CGFloat = 0
-
-    func path(in rect: CGRect) -> Path { Path(TuckLogo.linePath(side: rect.width, reach: reach)) }
+    func path(in rect: CGRect) -> Path { Path(TuckLogo.linePath(side: rect.width)) }
 }
 
 // MARK: - Steps

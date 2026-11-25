@@ -469,7 +469,7 @@ final class TuckModel: ObservableObject {
 
     /// Tucks every surface away, from the menu-bar item: the same as swiping up on each collapsed surface.
     func tuckAwayEverywhere(_ screenIDs: [CGDirectDisplayID]) {
-        if expandedScreenID != nil { collapse(via: .menu) }
+        if let open = expandedScreenID, screenIDs.contains(open) { collapse(via: .menu) }
         tuckedAwayScreenIDs.formUnion(screenIDs)
     }
 

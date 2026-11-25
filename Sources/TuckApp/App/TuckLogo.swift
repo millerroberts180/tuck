@@ -28,25 +28,21 @@ enum TuckLogo {
                                    cardHalf: 12, cardY: 122)
     /// Where the card starts as it drops into the dip: above the line.
     private static let cardStartY: CGFloat = 40
-    /// How much further the dip reaches down at full reach, in grid units.
-    private static let reachDepth: CGFloat = 28
 
     private static func cut(for side: CGFloat) -> Cut { side < 32 ? small : regular }
 
     /// The line in a square of `side` points, y down (for flipped views and layers), to be stroked
     /// `lineWidth(side:)` wide with round caps and joins; below 32 pt it is the small cut. It runs left to
-    /// right, so half way along it is at the floor of the dip. `reach` (0 at rest, 1 at most) deepens the
-    /// dip; every reach has the same elements, so Core Animation can morph between them.
-    static func linePath(side: CGFloat, reach: CGFloat = 0) -> CGPath {
+    /// right, so half way along it is at the floor of the dip.
+    static func linePath(side: CGFloat) -> CGPath {
         let cut = cut(for: side), scale = side / 256
-        let floor = cut.floor + reachDepth * reach
         func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: x * scale, y: y * scale) }
         let path = CGMutablePath()
         path.move(to: point(cut.tail, cut.top))
         path.addLine(to: point(cut.wall, cut.top))
-        path.addArc(tangent1End: point(cut.wall, floor), tangent2End: point(128, floor),
+        path.addArc(tangent1End: point(cut.wall, cut.floor), tangent2End: point(128, cut.floor),
                     radius: cut.radius * scale)
-        path.addArc(tangent1End: point(256 - cut.wall, floor), tangent2End: point(256 - cut.wall, cut.top),
+        path.addArc(tangent1End: point(256 - cut.wall, cut.floor), tangent2End: point(256 - cut.wall, cut.top),
                     radius: cut.radius * scale)
         path.addLine(to: point(256 - cut.wall, cut.top))
         path.addLine(to: point(256 - cut.tail, cut.top))
