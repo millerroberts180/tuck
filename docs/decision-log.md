@@ -53,12 +53,19 @@ written for Tuck.
     Away and Bring Tuck Back work, and pointing at the tucked notch's place shows it again. Tuck Front
     Window without Accessibility shakes the notch's shape. Switched to the bubble, the mark rests in it,
     the arrow takes its place when pointed at, and either end opens the fold.
+  - A throwaway off-screen run drove the real surface with made-up clicks and trackpad swipe events, on
+    a hardware notch, a drawn notch and the bubble, each empty and holding, with a stand-in window
+    service: 68 checks pass. A click opens the fold; a swipe down opens the shallow fold and a second the
+    full fold, and swipes up fold and close it. A swipe up on the hardware notch does nothing; the drawn
+    notch and bubble tuck away and come back (an empty bubble opens the fold instead). A refusal shakes
+    the notch's shape, a tucked window's card lands in the notch's middle with no dot, and the menu's
+    Tuck Away leaves another screen's open fold alone.
 - **Not checked:**
   - A hardware notch on a real MacBook. The test Mac has none, so the notch's own behaviour there was
-    seen only through the drawn notch and the snapshots.
-  - A two-finger swipe. The test Mac sends only mouse-wheel events, so the swipe stages rest on the
-    tests.
-  - Tucking a window, since the test Mac hasn't given this build Accessibility.
+    seen only through the drawn notch, the snapshots and the off-screen run.
+  - A real two-finger swipe. The test Mac sends only mouse-wheel events, so the swipe stages rest on the
+    tests and the off-screen run's made-up events.
+  - Tucking a real window, since the test Mac hasn't given this build Accessibility.
 
 ## 2026-11-19: Setup is three steps, done on the real Tuck
 
