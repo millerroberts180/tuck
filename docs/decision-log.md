@@ -32,8 +32,7 @@ written for Tuck.
   - **Tuck Away and Bring Tuck Back** act only on what can be tucked away, a bubble or a drawn notch
     (`OverlayCoordinator.tuckableScreenIDs`), and the menu hides both when there is neither.
   - **The bubble is unchanged:** its mark, faint at rest with its card while Tuck holds something, and
-    the Tuck arrow in its place when pointed at. Swiping down on an empty bubble that was tucked away
-    now brings it back, as on one that holds something, rather than opening the fold.
+    the Tuck arrow in its place when pointed at.
   - **Removed:** the resting dot, the mark's lit line and greeting (`TuckLogo`'s greeting reach and
     timings), and the empty notch's cue. The bubble's mark never lit or greeted, since the Tuck arrow
     always took its place when it was pointed at. `docs/images/notch.png` shows the bare notch, the

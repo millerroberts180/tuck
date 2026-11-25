@@ -1349,7 +1349,9 @@ final class SurfaceView: NSView {
         // Around a hardware notch the closed surface is the bare notch itself: down opens it, and there is
         // nothing to tuck away.
         if anchor.kind == .notch, !anchor.isSimulated { return .bareNotch }
-        return isShowingTucked ? .tucked : .collapsed
+        // A drawn notch shows empty or not, so it always comes back first; an empty bubble opens straight
+        // into the fold, as from the wings.
+        return isShowingTucked && (holdsAnything || anchor.kind == .notch) ? .tucked : .collapsed
     }
 
     /// Two-finger trackpad swipes, delivered by the overlay's scroll monitor before the panel sees them.

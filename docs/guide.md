@@ -232,8 +232,7 @@ Keyboard shortcuts are off by default; see "Keyboard shortcuts" below.
   the full fold while it is open; a shallow fold opened by a click or a swipe leaves the keyboard with
   the app in front. A status line shows at the foot only while there is something to say.
 - **One stream:** tucked windows, held items and, while clipboard history is on, copies, in one list by
-  date, newest first. An app's windows share one tile. Copies alone don't bring the mark out on a
-  notch.
+  date, newest first. An app's windows share one tile.
 - **Kinds:** what a copy is (a link, a colour, code, a date and so on) is recognised once, as it is
   copied, and a held item's kind is read from it the first time the fold shows it. Tiles of the same
   kind look alike whether the thing was copied or dropped.
