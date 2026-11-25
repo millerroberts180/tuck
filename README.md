@@ -33,7 +33,7 @@
 
 <p align="center">
   <img src="docs/images/notch.png" width="820"
-       alt="The notch empty, holding something with its mark and a dot, pointed at with its mark lit and an arrow, and with a file dragged over it saying “Drop file into Tuck”">
+       alt="The notch on its own whether empty or holding things, swelling a little when pointed at, and a band saying “Drop file into Tuck” popping out below it as a file comes near and is dragged over it">
 </p>
 
 On a display without a notch, Tuck sits in the menu bar as a small bubble.

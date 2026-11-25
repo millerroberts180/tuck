@@ -124,8 +124,11 @@ final class OverlayCoordinator {
         #endif
     }
 
-    /// Every display that has a surface, for actions that apply to all of them.
-    var screenIDs: [CGDirectDisplayID] { Array(controllers.keys) }
+    /// Displays whose closed surface can be tucked away: a bubble or a drawn notch. A closed hardware
+    /// notch is already bare.
+    var tuckableScreenIDs: [CGDirectDisplayID] {
+        controllers.values.filter { $0.anchor.kind == .bubble || $0.anchor.isSimulated }.map(\.anchor.screenID)
+    }
 
     /// Prefers the notched built-in display, otherwise the display with the menu bar.
     func expandOnPreferredScreen() {

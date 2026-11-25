@@ -29,15 +29,12 @@ final class SurfaceView: NSView {
     /// there while the surface rests in the notch, and macOS sends clicks and scrolls on transparent
     /// pixels straight through to the menu bar, so Tuck could never be hovered, clicked or swiped back.
     private let notchHitLayer = CALayer()
-    /// The left wing shows Tuck's mark, the screen's top edge dipping round the notch: faint at rest, with
-    /// a short card in the dip while Tuck holds something, as the Dock's Trash shows empty or full, and lit
-    /// in Tuck blue while the pointer is over the closed surface. Empty, a notched display shows no wings
-    /// at all; a bubble always shows the mark, alone in its middle, until the Tuck button takes its place.
+    /// A bubble shows Tuck's mark alone in its middle, the screen's top edge dipping round the notch:
+    /// faint, with a short card in the dip while Tuck holds something, as the Dock's Trash shows empty or
+    /// full, until the Tuck button takes its place. A notch shows nothing: closed, it is only the notch.
     private let markLayer = CALayer()
-    /// The whole line, faint: all the mark shows at rest.
+    /// The whole line, faint.
     private let markBaseLayer = CAShapeLayer()
-    /// The same line in Tuck blue, which comes on while the pointer is over the closed surface.
-    private let markLitLayer = CAShapeLayer()
     /// The card that drops into the dip as Tuck starts holding something, and lifts out as it empties.
     private let markCardLayer = CAShapeLayer()
     /// Whether the mark last showed its card, so only a change animates.
@@ -45,15 +42,12 @@ final class SurfaceView: NSView {
     /// Set when Tuck has just been given something while empty: the card drops in as what was deposited
     /// lands (`landDeposit`), or shortly, if nothing is on its way.
     private var pendingCard: DispatchWorkItem?
-    /// At rest a small quiet dot on the right wing, balancing the mark. Whenever the Tuck button shows it
-    /// gives way to the button. A bubble, which holds one symbol, shows none.
-    private let restingDotLayer = CALayer()
-    /// The Tuck button, which appears in the dot's place while the pointer is over the closed surface (in
-    /// a bubble, the mark's): an arrow up into the notch, stroked in the logo's own line and Tuck blue, so
-    /// it sits with the lit mark as its pair. A click tucks the window in front without opening the panel.
+    /// The Tuck button, which stands in a bubble's mark's place while the pointer is over it: an arrow up,
+    /// stroked in the logo's own line and Tuck blue. A click tucks the window in front without opening the
+    /// panel. A notch has none: closed, it is only the notch.
     private let tuckArrowLayer = CAShapeLayer()
-    /// The button's target, in view coordinates; set by layout. Around a notch it is the right wing; in a
-    /// bubble the middle, a little wider than the arrow, so the bubble's ends still open the fold.
+    /// The button's target, in view coordinates; set by layout. The bubble's middle, a little wider than
+    /// the arrow, so the bubble's ends still open the fold.
     private var tuckButtonRect: CGRect = .zero
     /// A press that began on the Tuck button.
     private var isPressingTuck = false
@@ -84,9 +78,6 @@ final class SurfaceView: NSView {
     private(set) var isShowingTucked = false
     private(set) var panelHeight: CGFloat = 320
     private var isHovering = false
-    /// Pointing at an empty Tuck shows "Drop into Tuck" under the notch (a bubble offers its Tuck button
-    /// instead).
-    private var isShowingCue = false
     /// How far a swipe in progress has pulled the collapsed surface (see `SwipeGestureTracker.pull`).
     private var gesturePull: CGFloat = 0
     /// Who the trackpad gesture in progress belongs to: the surface, the panel's scrolling list or the
@@ -100,10 +91,10 @@ final class SurfaceView: NSView {
     private var isShrinkingIntoNotch = false
     /// Mouse held down on the collapsed surface: it gives a little until released.
     private var isPressed = false
-    /// Keeps the mark and dot hidden while a closing panel is still folding away.
+    /// Keeps a bubble's mark hidden while a closing panel is still folding away.
     private var holdsCollapsedContent = false
-    /// Drop invitation, or the empty cue: nil when there is neither, otherwise 0 (the cue, or a drag just
-    /// inside the approach range) up to `DropApproach.levels` (a drag over the drop target).
+    /// The drop invitation: nil without a drag, otherwise 0 (a drag just inside the approach range) up
+    /// to `DropApproach.levels` (a drag over the drop target).
     private(set) var promptLevel: Int?
     /// The level the drag watcher last asked for.
     private var watcherLevel: Int?
@@ -139,8 +130,12 @@ final class SurfaceView: NSView {
     /// Anything for the closed surface to show: tucked windows or held items.
     private var holdsAnything: Bool { model.library.totalItemCount > 0 }
 
-    /// The closed surface is the bare notch: swiped away, or, on a notched display, empty.
-    private var restsInNotch: Bool { isShowingTucked || (anchor.kind == .notch && !holdsAnything) }
+    /// The closed surface is the bare notch: always around a notch, hardware or drawn, with nothing on
+    /// it, and for a bubble once it is swiped away.
+    private var restsInNotch: Bool { isShowingTucked || anchor.kind == .notch }
+
+    /// A drawn notch stands in for the hardware one, so its shape shows at rest unless swiped away.
+    private var drawsNotch: Bool { anchor.isSimulated && !isShowingTucked }
 
     /// A droppable drag is on its way or over the surface.
     private var isDragging: Bool { watcherLevel != nil || isAcceptingDrop }
@@ -168,19 +163,16 @@ final class SurfaceView: NSView {
         shapeLayer.shadowOffset = CGSize(width: 0, height: 2)
         root.addSublayer(shapeLayer)
 
-        for line in [markBaseLayer, markLitLayer, markCardLayer] {
+        for line in [markBaseLayer, markCardLayer] {
             line.fillColor = nil
             line.lineCap = .round
             line.lineJoin = .round
             markLayer.addSublayer(line)
         }
         markBaseLayer.opacity = Float(TuckLogo.restingOpacity)
-        markLitLayer.opacity = 0
         markCardLayer.opacity = 0
         root.addSublayer(markLayer)
 
-        restingDotLayer.opacity = 0
-        root.addSublayer(restingDotLayer)
         tuckArrowLayer.fillColor = nil
         tuckArrowLayer.lineCap = .round
         tuckArrowLayer.lineJoin = .round
@@ -211,35 +203,30 @@ final class SurfaceView: NSView {
         applyContentColors()
     }
 
-    /// Colours of what sits on the closed surface: the mark, the dot and the Tuck button, the drop words
-    /// and glyph. The faint line is the label colour; the lit line, its card and the button Tuck blue.
+    /// Colours of what sits on the closed surface: a bubble's mark and Tuck button, the drop words and
+    /// glyph. The faint line is the label colour; its card and the button Tuck blue.
     private func applyContentColors() {
         let appearance = contentAppearance
         let accent = appearanceCGColor(Theme.accentNSColor, for: appearance)
         markBaseLayer.strokeColor = appearanceCGColor(.labelColor, for: appearance)
-        markLitLayer.strokeColor = accent
         markCardLayer.strokeColor = accent
         tuckArrowLayer.strokeColor = accent
-        restingDotLayer.backgroundColor = appearanceCGColor(.tertiaryLabelColor, for: appearance)
         applyPromptContent()
     }
 
-    /// The one drop target's words and glyph: what the drag carries ("Drop link into Tuck"), or, with no
-    /// drag, the empty cue.
+    /// The one drop target's words and glyph: what the drag carries ("Drop link into Tuck").
     private func applyPromptContent() {
         let appearance = contentAppearance
-        let dragging = isDragging
-        let text = dragging ? model.dragKind.label : DropKind.invitation
+        let text = model.dragKind.label
         if text != promptText {
             promptText = text
             promptLabelLayer.string = text
             let size = (text as NSString).size(withAttributes: [.font: Self.promptFont])
             promptTextSize = CGSize(width: ceil(size.width), height: ceil(size.height))
         }
-        promptGlyphLayer.contents = Self.glyph(dragging ? Self.dropSymbol(model.dragKind) : "tray.and.arrow.down",
-                                               pointSize: 14, color: dragging ? Theme.accentNSColor : .secondaryLabelColor,
-                                               appearance: appearance)
-        promptLabelLayer.foregroundColor = appearanceCGColor(dragging ? .labelColor : .secondaryLabelColor, for: appearance)
+        promptGlyphLayer.contents = Self.glyph(Self.dropSymbol(model.dragKind), pointSize: 14,
+                                               color: Theme.accentNSColor, appearance: appearance)
+        promptLabelLayer.foregroundColor = appearanceCGColor(.labelColor, for: appearance)
     }
 
     static func dropSymbol(_ kind: DropKind) -> String {
@@ -330,7 +317,7 @@ final class SurfaceView: NSView {
     override func viewDidChangeBackingProperties() {
         super.viewDidChangeBackingProperties()
         let scale = window?.backingScaleFactor ?? 2
-        for layer in [markBaseLayer, markLitLayer, markCardLayer, tuckArrowLayer, promptGlyphLayer, promptLabelLayer] {
+        for layer in [markBaseLayer, markCardLayer, tuckArrowLayer, promptGlyphLayer, promptLabelLayer] {
             layer.contentsScale = scale
         }
     }
@@ -346,7 +333,7 @@ final class SurfaceView: NSView {
     private var surfaceRect: CGRect { surfaceRect(includingTransient: true) }
 
     /// The outline's rect. Without the transient parts (hover, press, the drop invitation) it is where
-    /// the closed content sits, so those never nudge the mark or the dot.
+    /// the closed content sits, so those never nudge a bubble's mark.
     private func surfaceRect(includingTransient: Bool) -> CGRect {
         let metrics = metrics
         var size: CGSize
@@ -357,15 +344,18 @@ final class SurfaceView: NSView {
         } else {
             size = metrics.collapsedSize
             // A swipe in progress pulls the surface along with the fingers: down stretches it towards the
-            // panel, or slides the wings back out of the notch; up draws the wings in.
-            let wingSpan = metrics.restingSize.width - metrics.tuckedSize.width
-            if gesturePull > 0, swipeStage == .tucked {
-                size.width += wingSpan * 0.6 * gesturePull
+            // panel, or a tucked bubble back out of its spot; up draws a bubble in, or a drawn notch up.
+            let span = metrics.restingSize.width - metrics.tuckedSize.width
+            if gesturePull > 0, swipeStage == .tucked, !metrics.isNotch {
+                size.width += span * 0.6 * gesturePull
             } else if gesturePull > 0 {
                 size.width += 10 * gesturePull
                 size.height += (metrics.isNotch ? 6 : 3) * gesturePull
             } else if gesturePull < 0, !restsInNotch {
-                size.width -= wingSpan * 0.6 * -gesturePull
+                size.width -= span * 0.6 * -gesturePull
+            } else if gesturePull < 0, drawsNotch {
+                size.width -= 10 * -gesturePull
+                size.height -= 6 * -gesturePull
             }
             if isHovering && includingTransient {
                 size.width += 8
@@ -380,9 +370,9 @@ final class SurfaceView: NSView {
                       width: size.width, height: size.height)
     }
 
-    /// How far the closed surface pops out for the drop target or the empty cue: as soon as a drag starts,
-    /// just enough for its words (a band under the notch, or a bubble wide enough for them), then a
-    /// little more as the pointer nears. Sideways growth per side, downward growth in total.
+    /// How far the closed surface pops out for the drop target: as soon as a drag starts, just enough for
+    /// its words (a band under the notch, or a bubble wide enough for them), then a little more as the
+    /// pointer nears. Sideways growth per side, downward growth in total.
     private var promptGrowth: CGSize? {
         guard let level = promptLevel else { return nil }
         let closeness = CGFloat(level) / CGFloat(DropApproach.levels)
@@ -532,9 +522,9 @@ final class SurfaceView: NSView {
     }
 
     /// The card drops into the dip from above with the mark's swell and settles, as Tuck starts holding
-    /// something; as it empties the card lifts out. With Reduce Motion it fades instead. The line itself
-    /// lights only while pointed at (`applyVisibility`). In a bubble pointed at, the card drops into the
-    /// hidden mark and the Tuck button standing in its place swells instead.
+    /// something; as it empties the card lifts out. With Reduce Motion it fades instead. In a bubble
+    /// pointed at, the card drops into the hidden mark and the Tuck button standing in its place swells
+    /// instead.
     private func setMarkHolds(_ holds: Bool, animated: Bool) {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
@@ -579,9 +569,9 @@ final class SurfaceView: NSView {
         markCardLayer.add(fall, forKey: "drop")
     }
 
-    /// The closed surface's wings come out of the notch as Tuck starts holding something, and go back in
-    /// as it empties or is swiped away, morphing on from wherever a swipe left it. While the panel is open
-    /// or a drop is invited, the change waits for them to end.
+    /// A bubble shrinks to its spot as it is swiped away and comes back out as it is brought back,
+    /// morphing on from wherever a swipe left it. While the panel is open or a drop is invited, the change
+    /// waits for them to end.
     private func followRestingForm() {
         let rests = restsInNotch
         guard let shown = shownRestsInNotch, shown != rests else {
@@ -608,39 +598,11 @@ final class SurfaceView: NSView {
         applyVisibility(animated: true, duration: 0.3)
     }
 
-    /// As the pointer arrives on the closed surface the mark greets it while its line lights
-    /// (`applyVisibility`): the dip reaches down, as the panel would drop from it, springs back a little
-    /// past rest and settles, with the card (while Tuck holds something) riding it a beat behind. Run once
-    /// per arrival, and left to finish rather than restarted. Under Reduce Motion the line only lights. A
-    /// bubble's mark is giving way to the Tuck button as the pointer arrives, so it greets only when the
-    /// button doesn't come.
-    private func greetMark() {
-        guard !restsInNotch, !holdsCollapsedContent, !reduceMotion, !buttonTakesMarksPlace,
-              markBaseLayer.animation(forKey: "greet") == nil else { return }
-        let side = markLayer.bounds.width
-        let reach = CAKeyframeAnimation(keyPath: "path")
-        reach.values = TuckLogo.greetingReach.map { TuckLogo.linePath(side: side, reach: $0) }
-        reach.keyTimes = TuckLogo.greetingKeyTimes.map { NSNumber(value: $0) }
-        reach.duration = TuckLogo.greetingDuration
-        reach.timingFunctions = [CAMediaTimingFunction(name: .easeOut), CAMediaTimingFunction(name: .easeInEaseOut),
-                                 CAMediaTimingFunction(name: .easeInEaseOut), CAMediaTimingFunction(name: .easeOut)]
-        markBaseLayer.add(reach, forKey: "greet")
-        markLitLayer.add(reach, forKey: "greet")
-        let ride = CAKeyframeAnimation(keyPath: "transform.translation.y")
-        ride.values = TuckLogo.greetingReach.map { $0 * TuckLogo.reachDrop(side: side) }
-        ride.keyTimes = reach.keyTimes
-        ride.duration = reach.duration
-        ride.timingFunctions = reach.timingFunctions
-        ride.isAdditive = true
-        ride.beginTime = markCardLayer.convertTime(CACurrentMediaTime(), from: nil) + TuckLogo.greetingCardDelay
-        markCardLayer.add(ride, forKey: "greet")
-    }
-
     private func layoutCollapsedContent() {
         let metrics = metrics
-        // The expanded outline is much wider than the closed wings. Keep the closed content anchored to
-        // those wings while it fades out; using surfaceRect here sends it to the panel's far edges during
-        // the opening morph, outside the visible notch.
+        // The expanded outline is much wider than the closed surface. Keep the closed content anchored to
+        // its resting place while it fades out; using surfaceRect here sends it to the panel's far edges
+        // during the opening morph.
         let rect = isShowingExpanded
             ? CGRect(x: (bounds.width - metrics.restingSize.width) / 2, y: metrics.topInset,
                      width: metrics.restingSize.width, height: metrics.restingSize.height)
@@ -648,45 +610,29 @@ final class SurfaceView: NSView {
         let promptRect = surfaceRect
         let mark = metrics.markSide
         let button = metrics.tuckButtonSide
-        // Content stays centred on the resting height, so hover and a downward pull never move it.
+        // Content stays centred on the resting height, so hover and a downward pull never move it. A
+        // bubble holds one symbol in its middle: the mark, or the Tuck button in its place, so the one
+        // gives way to the other without either sliding. Around a notch neither shows, and the middle is
+        // where a drop draws into (`compressIntoMark`).
         let midY = pixelAligned(rect.minY + metrics.height / 2)
-        let markCenterX: CGFloat
-        let buttonCenterX: CGFloat
-        if metrics.isNotch {
-            // Each wing runs from the shape's straight side to the notch, so content slides in with the
-            // sides when the surface tucks away and stays put when hover grows it.
-            let notchLeft = bounds.midX - anchor.notchSize.width / 2
-            let notchRight = bounds.midX + anchor.notchSize.width / 2
-            markCenterX = pixelAligned((rect.minX + SurfaceMetrics.shoulder + notchLeft) / 2)
-            buttonCenterX = pixelAligned((rect.maxX - SurfaceMetrics.shoulder + notchRight) / 2)
-        } else {
-            // A bubble holds one symbol in its middle: the mark, or the Tuck button in its place, so the
-            // one gives way to the other without either sliding.
-            markCenterX = pixelAligned(rect.midX)
-            buttonCenterX = markCenterX
-        }
+        let centerX = pixelAligned(rect.midX)
         markLayer.bounds = CGRect(x: 0, y: 0, width: mark, height: mark)
-        markLayer.position = CGPoint(x: markCenterX, y: midY)
+        markLayer.position = CGPoint(x: centerX, y: midY)
         if markBaseLayer.bounds.width != mark {
             CATransaction.begin()
             CATransaction.setDisableActions(true)
             let line = TuckLogo.linePath(side: mark)
-            for layer in [markBaseLayer, markLitLayer, markCardLayer] {
+            for layer in [markBaseLayer, markCardLayer] {
                 layer.frame = CGRect(x: 0, y: 0, width: mark, height: mark)
                 layer.path = layer === markCardLayer ? TuckLogo.cardPath(side: mark) : line
                 layer.lineWidth = TuckLogo.lineWidth(side: mark)
             }
             CATransaction.commit()
         }
-        // The resting dot, and the Tuck button's arrow in a square the mark's size, so the two strokes
-        // match. Its whole wing is the target; in a bubble the arrow and 6 pt either side, leaving the
-        // bubble's ends (`bubbleEndWidth`) to open the fold.
-        let dot = SurfaceMetrics.restingDotSize
-        restingDotLayer.bounds = CGRect(x: 0, y: 0, width: dot, height: dot)
-        restingDotLayer.cornerRadius = dot / 2
-        restingDotLayer.position = CGPoint(x: buttonCenterX, y: midY)
+        // The Tuck button's arrow, in a square the mark's size so the two strokes match. Its target is the
+        // arrow and 6 pt either side, leaving the bubble's ends (`bubbleEndWidth`) to open the fold.
         tuckArrowLayer.bounds = CGRect(x: 0, y: 0, width: mark, height: mark)
-        tuckArrowLayer.position = CGPoint(x: buttonCenterX, y: midY)
+        tuckArrowLayer.position = CGPoint(x: centerX, y: midY)
         if tuckArrowLayer.lineWidth != TuckLogo.lineWidth(side: mark) || tuckArrowLayer.path == nil {
             CATransaction.begin()
             CATransaction.setDisableActions(true)
@@ -694,11 +640,10 @@ final class SurfaceView: NSView {
             tuckArrowLayer.lineWidth = TuckLogo.lineWidth(side: mark)
             CATransaction.commit()
         }
-        let buttonWidth = metrics.isNotch ? metrics.wingWidth : button + 12
-        tuckButtonRect = CGRect(x: buttonCenterX - buttonWidth / 2, y: rect.minY, width: buttonWidth, height: metrics.height)
+        tuckButtonRect = CGRect(x: centerX - (button + 12) / 2, y: rect.minY, width: button + 12, height: metrics.height)
 
-        // Drop target and empty cue: the glyph and its words, centred under the notch in the band the
-        // surface pops out by, or inside the widened bubble.
+        // Drop target: the glyph and its words, centred under the notch in the band the surface pops out
+        // by, or inside the widened bubble.
         let glyph = Self.promptGlyphSize
         let promptMidY = metrics.isNotch
             ? promptRect.minY + metrics.height + (promptRect.height - metrics.height) / 2
@@ -717,9 +662,10 @@ final class SurfaceView: NSView {
         return (value * scale).rounded() / scale
     }
 
-    /// Opacity of the shape and of the mark, the dot and the Tuck button, from expansion, resting in the
-    /// notch, the drop invitation, hover and any swipe in progress. Resting in the notch the surface draws
-    /// nothing unless hovered, pulled or still shrinking into it, so only the hardware notch shows.
+    /// Opacity of the shape and of a bubble's mark and Tuck button, from expansion, resting in the notch,
+    /// the drop invitation, hover and any swipe in progress. Resting in the notch the surface draws
+    /// nothing unless hovered, pulled or still shrinking into it, so only the hardware notch shows; a
+    /// drawn notch draws itself unless swiped away.
     private func applyVisibility(animated: Bool, duration: CFTimeInterval = 0.16) {
         let shape: Float
         let content: Float
@@ -727,12 +673,12 @@ final class SurfaceView: NSView {
             shape = 1
             content = 0
         } else if promptLevel != nil {
-            // The words take the bubble's room; around a notch the mark stays in its wing.
+            // The words take the closed surface's room.
             shape = 1
-            content = anchor.kind == .notch ? 1 : 0
+            content = 0
         } else if restsInNotch {
             let pull = max(gesturePull, 0)
-            shape = pull > 0 || isHovering || isShrinkingIntoNotch ? 1 : 0
+            shape = pull > 0 || isHovering || isShrinkingIntoNotch || drawsNotch ? 1 : 0
             content = swipeStage == .tucked ? Float(pull) : 0
         } else {
             shape = 1
@@ -747,21 +693,13 @@ final class SurfaceView: NSView {
         shapeLayer.opacity = shape
         let button = showsTuckButton
         let buttonInMarksPlace = buttonTakesMarksPlace
-        // Empty, a notch shows no mark unless a drop or the cue brings the wings out; a bubble always does,
-        // except while the Tuck button stands in its place.
-        let showsMark = holdsAnything || !metrics.isNotch || promptLevel != nil
-        markLayer.opacity = showsMark && !buttonInMarksPlace ? content : 0
-        // The line lights while the pointer is over the closed surface, as it greets it, and goes back to
-        // faint when the pointer leaves. A bubble's mark stays faint as it gives way to the button.
-        let pointedAt = isHovering && !isShowingExpanded && !isShowingTucked && promptLevel == nil
-        markLitLayer.opacity = pointedAt && !buttonInMarksPlace ? 1 : 0
-        // The resting dot shrinks away as the arrow rises into its place, and back again. A bubble has no
-        // dot: its mark shrinks a little as it fades, and the arrow rises in the middle where it was.
-        restingDotLayer.opacity = showsMark && !button && metrics.isNotch ? content : 0
+        // A bubble always shows its mark, except while the Tuck button stands in its place: the mark
+        // shrinks a little as it fades, and the arrow rises in the middle where it was. A notch shows
+        // neither.
+        markLayer.opacity = !metrics.isNotch && !buttonInMarksPlace ? content : 0
         tuckArrowLayer.opacity = button ? content : 0
         markLayer.transform = buttonInMarksPlace && !reduceMotion ? CATransform3DMakeScale(0.7, 0.7, 1) : CATransform3DIdentity
         if !reduceMotion {
-            restingDotLayer.transform = button ? CATransform3DMakeScale(0.4, 0.4, 1) : CATransform3DIdentity
             if !isPressingTuck {
                 let scale: CGFloat = button ? 1 : 0.6
                 let rise = button ? 0 : TuckLogo.lineWidth(side: metrics.markSide)
@@ -771,14 +709,14 @@ final class SurfaceView: NSView {
         CATransaction.commit()
     }
 
-    /// The right wing, or the middle of a bubble, is a Tuck button while the pointer is over the closed
-    /// surface.
+    /// The middle of a bubble is a Tuck button while the pointer is over it. A notch, resting in the notch,
+    /// never has one.
     private var showsTuckButton: Bool {
         isHovering && !isShowingExpanded && !restsInNotch && promptLevel == nil && !holdsCollapsedContent
     }
 
     /// A bubble holds one symbol: while the Tuck button shows, it stands in the mark's place.
-    private var buttonTakesMarksPlace: Bool { showsTuckButton && !metrics.isNotch }
+    private var buttonTakesMarksPlace: Bool { showsTuckButton }
 
     /// What a deposit landing swells: the mark, or the Tuck button while it stands in the mark's place, so
     /// the swell is never drawn on a hidden mark.
@@ -805,9 +743,9 @@ final class SurfaceView: NSView {
         landingLayer.add(pulse, forKey: "pulse")
     }
 
-    /// A small sideways shake of the mark and the dot (or the Tuck button), or of a bubble's one symbol,
-    /// when an action (a keyboard shortcut, say) did nothing while the panel is closed. With the panel
-    /// open, its status line says why instead.
+    /// A small sideways shake of a bubble's one symbol, or of the notch itself, when an action (a keyboard
+    /// shortcut, say) did nothing while the panel is closed. With the panel open, its status line says why
+    /// instead.
     private func shakeIfNeeded() {
         guard model.refusals != lastRefusals else { return }
         lastRefusals = model.refusals
@@ -817,15 +755,26 @@ final class SurfaceView: NSView {
         shake.keyTimes = [0, 0.15, 0.4, 0.62, 0.82, 1]
         shake.duration = 0.36
         shake.isAdditive = true
-        for layer in [markLayer, restingDotLayer, tuckArrowLayer] { layer.add(shake, forKey: "refuse") }
+        guard metrics.isNotch else {
+            for layer in [markLayer, tuckArrowLayer] { layer.add(shake, forKey: "refuse") }
+            return
+        }
+        // A notch has nothing on it to shake, so its shape shakes, drawn for as long as it moves: black
+        // edges either side of the hardware notch, gone when it settles.
+        let shown = CABasicAnimation(keyPath: "opacity")
+        shown.fromValue = 1
+        shown.toValue = 1
+        shown.duration = shake.duration
+        shapeLayer.add(shown, forKey: "refuseShown")
+        shapeLayer.add(shake, forKey: "refuse")
     }
 
     // MARK: Deposits
 
     /// Where a tucked window's card lands, in global coordinates: the window's row or tile while the
-    /// open panel shows it, as a Tuck-blue dot on its icon that opens out into the row; the dip of the
-    /// mark on the closed surface (in a bubble pointed at, the foot of the Tuck button standing there); or
-    /// the middle of the surface, with no dot, while it rests in the notch.
+    /// open panel shows it, as a Tuck-blue dot on its icon that opens out into the row; the dip of a
+    /// bubble's mark (pointed at, the foot of the Tuck button standing there); or the middle of the
+    /// surface, with no dot, while it rests in the notch.
     func depositLanding(window windowID: UUID) -> DepositLanding? {
         guard let window else { return nil }
         layoutSubtreeIfNeeded()
@@ -857,9 +806,9 @@ final class SurfaceView: NSView {
         return DepositLanding(point: screen(CGPoint(x: rect.midX, y: rect.minY + metrics.height / 2)), dot: nil)
     }
 
-    /// A drop on the closed surface goes into the mark: the drop words and glyph draw together into it,
-    /// shrinking, as the band folds back, and the mark takes them in as they arrive (`pulseIfNeeded`).
-    /// Under Reduce Motion they simply fade with the band.
+    /// A drop on the closed surface goes into it: the drop words and glyph draw together into a bubble's
+    /// mark, which takes them in as they arrive (`pulseIfNeeded`), or into the middle of the notch,
+    /// shrinking, as the band folds back. Under Reduce Motion they simply fade with the band.
     private func compressIntoMark() {
         guard !reduceMotion else { return }
         let target = NSValue(point: markLayer.position)
@@ -942,7 +891,7 @@ final class SurfaceView: NSView {
 
     /// Opening is one lively spring for the whole outline, with the panel clipped to it and fading in
     /// just behind while the black of the notch gains its shadow; closing settles without overshoot while
-    /// the panel fades and folds away inside it, and the mark and dot come back once it is nearly home.
+    /// the panel fades and folds away inside it, and a bubble's mark comes back once it is nearly home.
     func setExpanded(_ expanded: Bool, completion: (() -> Void)? = nil) {
         guard expanded != isShowingExpanded else {
             completion?()
@@ -951,9 +900,6 @@ final class SurfaceView: NSView {
         isShowingExpanded = expanded
         gesturePull = 0
         if expanded {
-            // The fold takes over from the empty cue.
-            isShowingCue = false
-            if promptLevel != nil, !isDragging { promptLevel = nil }
             applySurfaceFill(animated: true)
             applyPromptAppearance(animated: true)
             // From the keyboard the panel is wanted at once: no overshoot to wait out.
@@ -976,8 +922,8 @@ final class SurfaceView: NSView {
         // before the panel opened must not carry the wider, pointed-at form back with it.
         isHovering = isPointerOverClosedSurface && promptLevel == nil
         applySurfaceFill(animated: true)
-        // The mark and dot were laid out for the open panel, further out than the wings: put them back in
-        // place while they are hidden, so they come back where they belong rather than jump there.
+        // A bubble's mark was laid out for the open panel: put it back in place while it is hidden, so it
+        // comes back where it belongs rather than jumps there.
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         applyContentColors()
@@ -1189,7 +1135,7 @@ final class SurfaceView: NSView {
             completion?()
             return
         }
-        let level = isAcceptingDrop ? DropApproach.levels : (watcherLevel ?? (isShowingCue ? 0 : nil))
+        let level = isAcceptingDrop ? DropApproach.levels : watcherLevel
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         applyPromptContent()
@@ -1209,12 +1155,19 @@ final class SurfaceView: NSView {
             onPromptRoom?(true)
             layoutSubtreeIfNeeded()
         }
+        // Going back into the notch, the band stays drawn until it is home, rather than fading on the way.
+        let retreating = level == nil && restsInNotch
+        if retreating { isShrinkingIntoNotch = true }
         promptLevel = level
         animateShape(to: surfacePath(for: surfaceRect), spring: SurfaceMotion.pop) { [weak self] in
             guard let self else { return }
             if self.promptLevel == nil, level == nil {
                 self.onPromptRoom?(false)
-                // The wings follow the library again once the invitation has gone.
+                if retreating {
+                    self.isShrinkingIntoNotch = false
+                    self.applyVisibility(animated: true, duration: 0.08)
+                }
+                // A bubble follows being tucked away again once the invitation has gone.
                 self.followRestingForm()
             }
             completion?()
@@ -1261,7 +1214,7 @@ final class SurfaceView: NSView {
 
     /// The drop rim, in Tuck blue on the outline so it wraps the notch and rides every spring: around the
     /// invitation while a drag nears, firming up over the target, and around the open panel while
-    /// something is dragged over it. The empty cue has none.
+    /// something is dragged over it.
     private func applyDropRim() {
         promptRimLayer.strokeColor = appearanceCGColor(Theme.accentNSColor, for: contentAppearance)
         if isShowingExpanded {
@@ -1277,13 +1230,18 @@ final class SurfaceView: NSView {
 
     // MARK: Tucking away
 
-    /// Tucks the closed surface into the notch or brings it back out, morphing on from wherever a swipe
-    /// left it. While the panel is open the change waits for it to close.
+    /// Tucks a bubble or drawn notch away or brings it back, morphing on from wherever a swipe left it.
+    /// While the panel is open the change waits for it to close. A hardware notch is never tucked away:
+    /// closed, it is already bare.
     func setTuckedAway(_ tucked: Bool) {
         guard tucked != isShowingTucked else { return }
         isShowingTucked = tucked
         gesturePull = 0
         followRestingForm()
+        // A drawn notch keeps its shape either way: it settles back from the swipe and fades out, or in.
+        guard anchor.isSimulated, !isShowingExpanded else { return }
+        animateShape(to: surfacePath(for: surfaceRect))
+        applyVisibility(animated: true, duration: 0.3)
     }
 
     // MARK: Pointer
@@ -1307,23 +1265,11 @@ final class SurfaceView: NSView {
         setHovering(false)
     }
 
-    /// Pointing at the closed surface opens nothing: one that holds something greets the pointer, lights
-    /// its mark and offers the Tuck button (a bubble's mark gives way to it instead); an empty notch shows
-    /// "Drop into Tuck". A bubble offers the button even when Tuck is empty, as it did before the prompt.
+    /// Pointing at the closed surface opens nothing: a notch swells a little, and a bubble's mark gives
+    /// way to the Tuck button.
     private func setHovering(_ hovering: Bool) {
         guard hovering != isHovering else { return }
         isHovering = hovering
-        if hovering, model.isStreamEmpty, metrics.isNotch {
-            isShowingCue = true
-            updatePrompt()
-            return
-        }
-        if !hovering, isShowingCue {
-            isShowingCue = false
-            updatePrompt()
-            return
-        }
-        if hovering { greetMark() }
         animateShape(to: surfacePath(for: surfaceRect))
         applyVisibility(animated: true)
         needsLayout = true
@@ -1348,7 +1294,7 @@ final class SurfaceView: NSView {
     }
 
     /// A press gives a little; letting go over the surface opens it from the pressed shape, letting go
-    /// elsewhere springs it back. A press on the Tuck button presses the button instead.
+    /// elsewhere springs it back. A press on a bubble's Tuck button presses the button instead.
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
         if isShowingExpanded {
@@ -1400,8 +1346,10 @@ final class SurfaceView: NSView {
 
     private var swipeStage: SwipeGestureTracker.Stage {
         if isShowingExpanded { return model.foldDepth == .full ? .full : .expanded }
-        // Empty, the bare notch is the closed surface itself: down opens it, as from the wings.
-        return isShowingTucked && holdsAnything ? .tucked : .collapsed
+        // Around a hardware notch the closed surface is the bare notch itself: down opens it, and there is
+        // nothing to tuck away.
+        if anchor.kind == .notch, !anchor.isSimulated { return .bareNotch }
+        return isShowingTucked ? .tucked : .collapsed
     }
 
     /// Two-finger trackpad swipes, delivered by the overlay's scroll monitor before the panel sees them.

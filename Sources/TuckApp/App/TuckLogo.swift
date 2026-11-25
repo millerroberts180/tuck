@@ -28,7 +28,7 @@ enum TuckLogo {
                                    cardHalf: 12, cardY: 122)
     /// Where the card starts as it drops into the dip: above the line.
     private static let cardStartY: CGFloat = 40
-    /// How much further the dip reaches down as the pointer arrives on the notch, in grid units.
+    /// How much further the dip reaches down at full reach, in grid units.
     private static let reachDepth: CGFloat = 28
 
     private static func cut(for side: CGFloat) -> Cut { side < 32 ? small : regular }
@@ -36,7 +36,7 @@ enum TuckLogo {
     /// The line in a square of `side` points, y down (for flipped views and layers), to be stroked
     /// `lineWidth(side:)` wide with round caps and joins; below 32 pt it is the small cut. It runs left to
     /// right, so half way along it is at the floor of the dip. `reach` (0 at rest, 1 at most) deepens the
-    /// dip for the notch's greeting; every reach has the same elements, so Core Animation can morph between them.
+    /// dip; every reach has the same elements, so Core Animation can morph between them.
     static func linePath(side: CGFloat, reach: CGFloat = 0) -> CGPath {
         let cut = cut(for: side), scale = side / 256
         let floor = cut.floor + reachDepth * reach
@@ -84,16 +84,6 @@ enum TuckLogo {
 
     /// How far the card drops into the dip as Tuck starts holding something, in points.
     static func cardDrop(side: CGFloat) -> CGFloat { (cut(for: side).cardY - cardStartY) * side / 256 }
-
-    /// How far the dip's floor, and the card resting on it, move down at full reach, in points.
-    static func reachDrop(side: CGFloat) -> CGFloat { reachDepth * side / 256 }
-
-    /// The greeting as the pointer arrives on the closed notch or bubble, as fractions of full reach: the
-    /// dip reaches down quickly, springs back a little past rest and settles. The card rides it a beat behind.
-    static let greetingReach: [CGFloat] = [0, 1, -0.22, 0.06, 0]
-    static let greetingKeyTimes: [Double] = [0, 0.26, 0.58, 0.8, 1]
-    static let greetingDuration: Double = 0.5
-    static let greetingCardDelay: Double = 0.035
 
     /// The menu-bar icon: the small cut as a template image, so the menu bar tints it.
     static func menuBarImage() -> NSImage {

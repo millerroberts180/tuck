@@ -102,29 +102,31 @@ enum PanelSnapshots {
                     }
                 }
             }
-            func surface(_ name: String, _ fixture: Fixture, kind: ScreenAnchor.Kind = .notch, menuBarHeight: CGFloat? = nil,
-                         dropLevel: Int? = nil, dropKind: DropKind = .file, hovered: Bool = false) {
+            func surface(_ name: String, _ fixture: Fixture, kind: ScreenAnchor.Kind = .notch, drawn: Bool = false,
+                         menuBarHeight: CGFloat? = nil, dropLevel: Int? = nil, dropKind: DropKind = .file,
+                         hovered: Bool = false) {
                 let model = makeModel(for: fixture)
                 model.dragStarted(kind: dropKind)
-                saveSurface(model, kind: kind, menuBarHeight: menuBarHeight, dropLevel: dropLevel, hovered: hovered,
-                            appearance: appearance, to: output.appendingPathComponent("surface-\(name)-\(suffix).png"))
+                saveSurface(model, kind: kind, drawn: drawn, menuBarHeight: menuBarHeight, dropLevel: dropLevel,
+                            hovered: hovered, appearance: appearance,
+                            to: output.appendingPathComponent("surface-\(name)-\(suffix).png"))
             }
-            // State 0: an empty Tuck is the bare notch; holding something (a little, or a great deal), the
-            // faint mark with its card, and the grey dot.
+            // State 0: the bare notch, empty or holding something, with nothing on it.
             surface("state0-empty", .empty)
             surface("state0", .mixed)
-            surface("state0-99plus", .huge)
-            // A deposit landing on the closed notch: the card waits for it, then drops into the mark.
+            // A deposit landing on the closed notch leaves nothing on it either.
             let depositing = makeModel(for: .mixed)
             depositing.tuckFrontWindow()
             saveSurface(depositing, kind: .notch, appearance: appearance,
                         to: output.appendingPathComponent("surface-state0-deposit-\(suffix).png"))
-            // Pointed at, nothing opens: holding something, the mark greets the pointer and lights, and the
-            // dot gives way to the Tuck button; empty, "Drop into Tuck".
+            // Pointed at, nothing opens: the notch swells a little, empty or not.
             surface("hover", .mixed, hovered: true)
             surface("hover-empty", .empty, hovered: true)
+            // A drawn notch on a display without one, drawn whether or not Tuck holds anything.
+            surface("drawn-notch", .mixed, drawn: true)
+            surface("drawn-notch-empty", .empty, drawn: true)
             // Without a notch: the bubble's lone mark, faint when empty, then on an external display's 24 pt
-            // menu bar. Pointed at, the Tuck button takes the mark's place; empty, "Drop into Tuck".
+            // menu bar. Pointed at, the Tuck button takes the mark's place, empty or not.
             surface("bubble-empty", .empty, kind: .bubble)
             surface("bubble", .mixed, kind: .bubble)
             surface("bubble-external", .mixed, kind: .bubble, menuBarHeight: 24)
@@ -144,13 +146,13 @@ enum PanelSnapshots {
     }
 
     /// The closed surface's own layers, drawn into an image over a menu-bar strip, with the camera
-    /// housing on top as the hardware hides what is under it.
-    private static func saveSurface(_ model: TuckModel, kind: ScreenAnchor.Kind, menuBarHeight: CGFloat? = nil,
-                                    dropLevel: Int? = nil, hovered: Bool = false,
+    /// housing on top as the hardware hides what is under it (none for a drawn notch).
+    private static func saveSurface(_ model: TuckModel, kind: ScreenAnchor.Kind, drawn: Bool = false,
+                                    menuBarHeight: CGFloat? = nil, dropLevel: Int? = nil, hovered: Bool = false,
                                     appearance: NSAppearance.Name, to url: URL) {
         let anchor = ScreenAnchor(kind: kind, screenID: 1, screenFrame: CGRect(x: 0, y: 0, width: 1512, height: 982),
                                   notchSize: kind == .notch ? notch : .zero, menuBarHeight: menuBarHeight ?? notch.height,
-                                  centerX: 756)
+                                  centerX: 756, isSimulated: drawn)
         let size = CGSize(width: 360, height: dropLevel == nil && !hovered ? 60 : 90)
         surfaceModels.append(model)
         let surface = SurfaceView(anchor: anchor, model: model)
@@ -185,7 +187,7 @@ enum PanelSnapshots {
         context.translateBy(x: 0, y: size.height)
         context.scaleBy(x: 1, y: -1)
         layer.render(in: context)
-        if kind == .notch {
+        if kind == .notch, !drawn {
             let housing = CGRect(x: (size.width - notch.width) / 2, y: 0, width: notch.width, height: notch.height)
             context.addPath(CGPath(roundedRect: housing, cornerWidth: 10, cornerHeight: 10, transform: nil))
             context.addRect(CGRect(x: housing.minX, y: 0, width: housing.width, height: 10))

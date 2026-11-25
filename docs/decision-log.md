@@ -10,6 +10,47 @@ it the test Mac. An **Inspiration** note names an app whose behaviour gave Tuck 
 inspiration only: no code, assets or drawings were taken from any of these apps, and Tuck's version is
 written for Tuck.
 
+## 2026-11-24: The closed notch is only the notch
+
+- **Decision:**
+  - **Closed, a hardware notch shows nothing of Tuck's,** empty or holding: no mark on the left wing, no
+    grey dot on the right, and no Tuck button's arrow. Its closed window is the notch's width plus
+    24 pt (`SurfaceMetrics.collapsedWindowSize`), so pointing at the menu bar beside the notch isn't
+    pointing at Tuck.
+  - **A click or a two-finger swipe down opens the fold,** the shallow fold first and the full fold on
+    the next swipe, as before. A swipe up on the closed notch does nothing, since there is nothing on it
+    to tuck away: `SwipeGestureTracker.Stage.bareNotch` is that stage.
+  - **Pointed at, the notch swells a little,** 8 pt wider and 2 pt taller, and settles back as the
+    pointer leaves. The "Drop into Tuck" cue on an empty notch went; the empty fold still says it.
+  - **A drag near the notch still pops the band out below it,** with the kind's symbol and "Drop file
+    into Tuck" (or link, or text), and its rim still lights over the drop target. The mark and the dot
+    no longer sit in its wings. A drop compresses into the notch's middle, a deposit lands there with no
+    dot, and a refusal shakes the notch itself.
+  - **A drawn notch** (Settings › Notch, on a display without one) is drawn at rest whether or not Tuck
+    holds anything, as a real notch is always there; before, an empty one drew nothing. It still tucks
+    away with a swipe up or the menu, and comes back with a swipe down.
+  - **Tuck Away and Bring Tuck Back** act only on what can be tucked away, a bubble or a drawn notch
+    (`OverlayCoordinator.tuckableScreenIDs`), and the menu hides both when there is neither.
+  - **The bubble is unchanged:** its mark, faint at rest with its card while Tuck holds something, and
+    the Tuck arrow in its place when pointed at. Swiping down on an empty bubble that was tucked away
+    now brings it back, as on one that holds something, rather than opening the fold.
+  - **Removed:** the resting dot, the mark's lit line and greeting (`TuckLogo`'s greeting reach and
+    timings), and the empty notch's cue. The bubble's mark never lit or greeted, since the Tuck arrow
+    always took its place when it was pointed at. `docs/images/notch.png` shows the bare notch, the
+    swell, and a file near the notch and over it.
+- **Why:** I wanted the closed notch to be just the notch, with nothing on it until I click it, swipe on
+  it or bring a file near it, and the drop band to show only what to do.
+- **Checked:**
+  - `scripts/test.sh`: 396 tests in 48 suites pass (395, plus 1). The new test checks that a swipe
+    down on the bare notch opens the fold and that a swipe up does nothing and moves nothing.
+  - `swift build` shows no warnings.
+  - `--snapshot-panel`: the notch empty, holding and pointed at, the drop band near and over for a
+    file, a link and text, the drawn notch empty and holding, and the bubble at rest, pointed at and
+    holding, each in Light, Dark and Increase Contrast. Nothing on the closed notch, and the bubble
+    matches main's shots.
+- **Not checked:** a hardware notch on a real MacBook. The test Mac has none, so the notch's own
+  behaviour there was seen only through the drawn notch and the snapshots.
+
 ## 2026-11-19: Setup is three steps, done on the real Tuck
 
 - **Decision:**
@@ -373,6 +414,9 @@ signed with "Tuck Local Signing" rather than ad hoc. The cask's `uninstall quit:
   first, still take 16 pt each in macOS 15, so hiding is `isVisible`.
 
 ## 2026-11-09: The README's pictures show the current fold and notch
+
+**Superseded in part** by "2026-11-24: The closed notch is only the notch": `notch.png` shows the bare
+notch, the notch swelling when pointed at, and the drop band with a file near the notch and over it.
 
 **Superseded in part** by "2026-11-14: One calm card, one line of details, a quiet toolbar, and the arrow
 keys": `hero.png` now shows the grey cards with their line of details and the quiet toolbar.
@@ -923,6 +967,10 @@ kind wears badges, text and links included, with the app it came from last.
 
 ## 2026-11-08: The notch greets without opening, the fold is black, and tiles show only what they hold
 
+**Superseded in part** by "2026-11-24: The closed notch is only the notch": the closed notch shows no
+mark, dot or arrow, pointing at it swells it a little rather than greeting or saying "Drop into Tuck",
+and a refusal shakes the notch.
+
 **Superseded in part** by "2026-11-19: Setup is three steps, done on the real Tuck": setup no longer has
 a tour, so what this says of its pretend notch and fold no longer applies.
 
@@ -1201,6 +1249,9 @@ chips show before a search too.
     correctly, so only the snapshot is affected.
 
 ## 2026-11-08: One place, one fold: the simplification redesign
+
+**Superseded in part** by "2026-11-24: The closed notch is only the notch": a swipe up on a closed
+hardware notch does nothing, since nothing is on it to tuck away.
 
 **Superseded in part** by "2026-11-19: Setup is three steps, done on the real Tuck": setup has no tour
 or pretend notch, and no Haptic feedback switch; the switch is in Settings › General.

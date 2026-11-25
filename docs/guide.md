@@ -61,16 +61,15 @@ Tutorial…** opens the same window as "Tuck Tutorial", with only the practice.
 
 | Action | Result |
 | --- | --- |
-| Click it | Open the shallow fold, or close the fold |
-| Point at it while it holds something | Nothing opens. The mark's dip reaches down and springs back, the faint line lights up in Tuck blue, and the grey dot on the right wing gives way to the Tuck button's arrow. In a bubble, the mark itself gives way to the arrow, in the same place. Moving away puts them back |
-| Click the arrow (pointed at) | Tuck the window in front, as the Tuck Front Window shortcut does, without opening the fold. A click on a bubble's ends, either side of the arrow, opens the fold |
-| Point at it while it's empty | A notch says "Drop into Tuck" and opens nothing; a bubble offers the arrow. Opened on purpose (a click, the shortcut or the menu), an empty fold is one line high and says the same |
-| Two-finger swipe down | One depth deeper: tucked away to closed, closed to the shallow fold, shallow to full |
-| Two-finger swipe up | One depth back: full to shallow, shallow to closed, and closed to tucked away completely, where only the hardware notch remains. A swipe that starts over the full fold's list, while it is long enough to scroll, scrolls it instead |
+| Click it | Open the shallow fold, or close the fold. Empty, the fold is one line high and says "Drop into Tuck" |
+| Point at it | Nothing opens. A notch swells a little; in a bubble, the mark gives way to the Tuck button's arrow, in the same place. Moving away puts it back |
+| Click a bubble's arrow (pointed at) | Tuck the window in front, as the Tuck Front Window shortcut does, without opening the fold. A click on the bubble's ends, either side of the arrow, opens the fold |
+| Two-finger swipe down | One depth deeper: closed to the shallow fold, shallow to full, and a bubble or drawn notch that was tucked away back to closed |
+| Two-finger swipe up | One depth back: full to shallow and shallow to closed. A closed bubble or drawn notch then tucks away completely; a closed hardware notch is already bare, so there it does nothing. A swipe that starts over the full fold's list, while it is long enough to scroll, scrolls it instead |
 | Two-finger swipe sideways | Over the shallow fold's row of cards, scroll it through everything; anywhere else, nothing. A swipe over the row goes the way it mostly moves: clearly up or down, it is a swipe like any other; otherwise it scrolls the row and never moves the fold |
 | Escape | Back one step: a question, the window picker, an edit, the ring the arrow keys put on a tile, the search, the full fold, then the fold itself |
 | Click elsewhere | Close the fold |
-| Tuck Away / Bring Tuck Back (menu-bar item) | Hide every surface, or show them all again, without a swipe |
+| Tuck Away / Bring Tuck Back (menu-bar item) | Hide every bubble and drawn notch, or show them all again, without a swipe. On a Mac showing Tuck only on a hardware notch, they aren't in the menu |
 
 **The fold**
 
@@ -208,17 +207,14 @@ Keyboard shortcuts are off by default; see "Keyboard shortcuts" below.
 ## What Tuck does
 
 - **The surface:** a notch surface on notched displays and a bubble on other displays, one per
-  connected display. An empty Tuck on a notch is the bare notch, and so is one holding only copies.
-  Holding a window or an item, Tuck's mark (the logo's round line) sits faint on the left wing with a
-  small Tuck blue card in its dip, as the Dock's Trash shows it holds something, and a grey dot sits
-  on the right wing. There is no count, no text and no control at rest. Without a notch, the bubble
-  shows only the mark, centred, faint, with the card while Tuck holds something. Pointed at, nothing
-  opens: the mark's dip reaches down and springs back, the line lights up in Tuck blue, and the dot
-  gives way to the Tuck button's arrow; in a bubble the mark itself gives way to the arrow, in the same
-  place. Pointed at with nothing in Tuck, a notch says "Drop into Tuck"; a bubble still offers the
-  arrow. A click or a swipe down opens the fold. It is sized like a native notch app: the notch's
-  own height, one notch-high wing either side. Swipes follow the fingers: the surface stretches, draws its wings in or
-  slides them out, then commits or springs back.
+  connected display. Closed, a notch is the bare notch, whatever Tuck holds: no mark, no count, no text
+  and no control. A drawn notch (Settings › Notch, on a display without one) is drawn black where a
+  notch would be and behaves the same way, except that it can be swiped away. Without a notch, the
+  bubble shows only Tuck's mark (the logo's round line), centred and faint, with a small Tuck blue card
+  in its dip while Tuck holds something, as the Dock's Trash shows it holds something. Pointed at,
+  nothing opens: a notch swells a little, and a bubble's mark gives way to the Tuck button's arrow, in
+  the same place. A click or a swipe down opens the fold. Swipes follow the fingers: the surface
+  stretches, or a bubble draws in or slides back out, then commits or springs back.
 - **The fold:** as wide as one row of its cards (540 pt for the three medium cards it starts with), so
   it grows wider before it grows taller, with its top line level with the notch. It is never narrower
   than the notch with room either side for the Tuck button and the lenses, where a short row sits in the
@@ -251,16 +247,19 @@ Keyboard shortcuts are off by default; see "Keyboard shortcuts" below.
 - **Drop invitation:** when a drag carrying something droppable enters a generous range around the
   notch or bubble, the surface widens into one target with an icon and "Drop file into Tuck", "Drop
   link into Tuck" or "Drop text into Tuck", read from what the drag says it carries as it starts
-  (files win over a link, a link over text). As the pointer nears, a blue rim around the target
-  strengthens, and firms up over it; under a notch it fades out before the screen's top edge. A drag never opens the fold. Over an open fold, the whole fold is
-  the target and says the same. Releasing beside the target is refused rather than captured.
+  (files win over a link, a link over text). Under a notch it is a band that pops out below it, with
+  nothing else on it. As the pointer nears, a blue rim around the target strengthens, and firms up over
+  it; under a notch it fades out before the screen's top edge. A drag never opens the fold. Over an
+  open fold, the whole fold is the target and says the same. Releasing beside the target is refused
+  rather than captured.
 - **File tray:** saved to `~/Library/Application Support/Tuck/library.json`. Files are references
   (path plus bookmark): renamed or moved files are followed, deleted files leave the tray. Any held
   file or stack can be compressed into a zip next to the originals (Downloads if that folder is
   read-only), held in Tuck. Tuck holds at most 200 items; a full Tuck takes what fits and says so.
-- **Deposits:** a drop on the closed surface draws into the mark, then the mark swells once; into an
-  empty Tuck, the mark's card drops into its dip instead. Tucked windows send a small card up into the
-  mark's dip, or with the fold open into their app's tile.
+- **Deposits:** a drop on a closed notch draws into its middle as the band folds back. On a bubble it
+  draws into the mark, then the mark swells once; into an empty Tuck, the mark's card drops into its
+  dip instead. Tucked windows send a small card up into the notch, or a bubble's mark, or with the fold
+  open into their app's tile.
 - **Optional, off by default:** modifier-drag move and resize; mouse-wheel smooth scrolling and
   wheel-only direction reversal (trackpad and Magic Mouse gestures, and scrolling with a modifier held,
   are never touched); global keyboard shortcuts; clipboard history of what is copied on this Mac (text,
@@ -305,9 +304,9 @@ Keyboard shortcuts are off by default; see "Keyboard shortcuts" below.
   text, fills, separators and Tuck blue each a stronger tone, draws an edge round each tile, and gives a
   white page's thumbnail an edge. Primary text keeps over 12:1 on every tile.
 - **Reduce Motion** is honoured throughout: no card or drop flights, springs settle without bouncing,
-  the fold, tiles and prompts fade instead of sliding, pressed controls don't shrink, the mark's card
-  and the Tuck button's arrow fade in rather than drop or rise, and the mark's greeting, its swell on a
-  deposit and refusals' shake don't play; pointed at, the line only lights. A fold opened from the
+  the fold, tiles and prompts fade instead of sliding, pressed controls don't shrink, a bubble's mark
+  card and Tuck button arrow fade in rather than drop or rise, and the mark's swell on a deposit and
+  refusals' shake don't play. A fold opened from the
   keyboard opens without overshoot, and the shallow fold's row goes back to its start without sliding.
 - **VoiceOver:** each tile is one element that says what it is, what its line of details says, the
   second details too ("README.md, Markdown, 4 KB, in Downloads, from Mail", and "copied at 10:57 AM"
@@ -323,9 +322,10 @@ When a window is tucked, a small card with the app's icon and the window's title
 window was, curving up into Tuck (on the window's own display). On the way it shrinks, lets go of its
 icon and title, and becomes a blue dot, passing over Tuck's surface so it is seen arriving. With the
 fold open, it comes down on the icon of its app's tile, which waits empty for it; it opens out
-across the tile and clears to show it. With the fold closed, it lands in the dip of Tuck's mark and
-merges into it, and the mark swells once, or, in a Tuck that held nothing, the mark's card drops into
-the dip; a Tuck that was swiped away comes back first, so there is a mark to land in. The flight
+across the tile and clears to show it. With the fold closed, it goes into the middle of the notch. On
+a bubble it lands in the dip of Tuck's mark and merges into it, and the mark swells once, or, in a
+Tuck that held nothing, the mark's card drops into the dip; a bubble or drawn notch that was swiped
+away comes back first, so there is somewhere to land. The flight
 takes about a quarter second (under half a second with the tile), staggers a few windows at a time,
 uses no window pixels (so no Screen Recording permission), and lives in a short-lived click-through
 panel that is closed on landing. With Reduce Motion on there is no flight: the tile simply appears,
@@ -494,10 +494,10 @@ Turn on Settings → Keyboard → Use keyboard shortcuts to use these from any a
   combinations. Tuck never sees any other keystroke and needs no extra permission for the shortcuts
   themselves; tucking and restoring still need Accessibility. While shortcuts are off, none are
   registered. If macOS or another app already uses one, Settings says so.
-- **Feedback with the fold closed:** a tuck shows its card flying into the mark; a restore shows the
-  window coming back. A shortcut that does nothing (no window in front, nothing tucked, no permission)
-  gives the mark and dot a small shake, and the reason is on the fold's status line for a few
-  seconds.
+- **Feedback with the fold closed:** a tuck shows its card flying into the notch, or a bubble's mark;
+  a restore shows the window coming back. A shortcut that does nothing (no window in front, nothing
+  tucked, no permission) gives the notch, or a bubble's mark, a small shake, and the reason is on the
+  fold's status line for a few seconds.
 - **The menu-bar menu** lists the same three actions and shows their shortcuts while they are on.
 - **Keyboard layouts:** a shortcut is stored by key position and labelled from the layout in use when it
   was recorded. The defaults are labelled for US-style layouts; on another layout, record them again to

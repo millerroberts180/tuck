@@ -4,17 +4,21 @@ import Foundation
 /// Turns two-finger trackpad scroll deltas on the Tuck surface into at most one deliberate action per
 /// gesture. Vertical swipes step the surface through its depths, the fold following the fingers:
 /// swiping down brings a tucked surface back, opens the collapsed one into the shallow fold, and deepens
-/// that into the full fold; swiping up goes back the same way, one depth per swipe, and tucks the
-/// collapsed surface away into the notch. Sideways movement does nothing: there are no pages or
-/// sessions to move between, so a gesture locks to the vertical only when it is clearly vertical, and a
-/// sideways brush never opens or closes anything. An action fires once, when the travel crosses a
+/// that into the full fold; swiping up goes back the same way, one depth per swipe, and tucks a
+/// collapsed bubble or drawn notch away. A closed hardware notch is already bare, so swiping up on it
+/// does nothing. Sideways movement does nothing: there are no pages or sessions to move between, so a
+/// gesture locks to the vertical only when it is clearly vertical, and a sideways brush never opens or
+/// closes anything. An action fires once, when the travel crosses a
 /// threshold, which is also the only moment a haptic tick may play; until then `pull` tells the surface
 /// how far the gesture has gone so it can follow the fingers.
 public final class SwipeGestureTracker {
     public enum Stage: Hashable, Sendable {
-        /// Swiped away: nothing but the hardware notch (or an invisible spot on displays without one).
+        /// Swiped away: a bubble or drawn notch gone, leaving an invisible spot.
         case tucked
+        /// Closed: a bubble or a drawn notch.
         case collapsed
+        /// Closed on a display with a hardware notch: the notch itself, with nothing on it to tuck away.
+        case bareNotch
         /// The shallow fold: the first rows of everything, with the lenses beside the notch.
         case expanded
         /// The full fold: the whole stream, with search and Arrange windows.
@@ -58,10 +62,11 @@ public final class SwipeGestureTracker {
         case (.tucked, true): .reveal
         case (.collapsed, true): .expand
         case (.collapsed, false): .tuckAway
+        case (.bareNotch, true): .expand
         case (.expanded, true): .unfold
         case (.expanded, false): .collapse
         case (.full, false): .fold
-        case (.tucked, false), (.full, true): nil
+        case (.tucked, false), (.bareNotch, false), (.full, true): nil
         }
     }
 

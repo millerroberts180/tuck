@@ -14,6 +14,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let scrolling = ScrollController()
     private let hotKeys = HotKeyCenter()
     private var shortcutMenuItems: [ShortcutAction: NSMenuItem] = [:]
+    /// Tuck Away and Bring Tuck Back, hidden while no display has a surface that can be tucked away.
+    private var tuckAwayMenuItems: [NSMenuItem] = []
     private var statusItem: NSStatusItem?
     /// Hides the menu-bar item while Line Apps has the family collapsed into its line. The notch and
     /// the bubble stay: they are Tuck's place, not an icon among the others.
@@ -339,6 +341,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSStatusBar.system.removeStatusItem(item)
             statusItem = nil
             shortcutMenuItems = [:]
+            tuckAwayMenuItems = []
         }
     }
 
@@ -352,12 +355,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let restore = menu.addItem(withTitle: "Restore Last Tucked Window", action: #selector(restoreLastTucked), keyEquivalent: "")
         [open, tuck, restore].forEach { $0.target = self }
         shortcutMenuItems = [.togglePanel: open, .tuckFrontWindow: tuck, .restoreLastTucked: restore]
-        // Swiping up tucks Tuck away and swiping down brings it back; these do the same without a swipe.
-        menu.addItem(withTitle: "Tuck Away", action: #selector(tuckAwaySurfaces), keyEquivalent: "").target = self
-        menu.addItem(withTitle: "Bring Tuck Back", action: #selector(revealSurfaces), keyEquivalent: "").target = self
+        // On a bubble or drawn notch, swiping up tucks Tuck away and swiping down brings it back; these do
+        // the same without a swipe. A closed hardware notch is already bare, so with only that they are
+        // hidden (`menuNeedsUpdate`).
+        let tuckAway = menu.addItem(withTitle: "Tuck Away", action: #selector(tuckAwaySurfaces), keyEquivalent: "")
+        let bringBack = menu.addItem(withTitle: "Bring Tuck Back", action: #selector(revealSurfaces), keyEquivalent: "")
+        tuckAwayMenuItems = [tuckAway, bringBack]
+        tuckAwayMenuItems.forEach { $0.target = self }
         menu.addItem(withTitle: "Settings…", action: #selector(openSettings), keyEquivalent: ",").target = self
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit Tuck", action: #selector(quit), keyEquivalent: "q").target = self
+        menu.delegate = self
         item.menu = menu
         // Turned on while collapsed into Line Apps' line, it waits there until the line lets it out.
         item.isVisible = !MainActor.assumeIsolated { lineFold.isFolded }
@@ -368,7 +376,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func tuckFrontWindow() { model.tuckFrontWindow() }
     @objc private func restoreLastTucked() { model.restoreLastTuckedWindow() }
     @objc private func revealSurfaces() { model.revealEverywhere() }
-    @objc private func tuckAwaySurfaces() { model.tuckAwayEverywhere(coordinator.screenIDs) }
+    @objc private func tuckAwaySurfaces() { model.tuckAwayEverywhere(coordinator.tuckableScreenIDs) }
     @objc private func openSettings() { settingsWindow.show() }
     /// Quitting moves windows parked off screen to the Dock, which takes Accessibility. Without it they
     /// would stay out of sight until Tuck is allowed again and reopened, so that is said first. Only this
@@ -404,9 +412,16 @@ extension AppDelegate: NSMenuItemValidation {
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         switch menuItem.action {
         case #selector(revealSurfaces): return !model.tuckedAwayScreenIDs.isEmpty
-        case #selector(tuckAwaySurfaces): return !Set(coordinator.screenIDs).isSubset(of: model.tuckedAwayScreenIDs)
+        case #selector(tuckAwaySurfaces): return !Set(coordinator.tuckableScreenIDs).isSubset(of: model.tuckedAwayScreenIDs)
         case #selector(restoreLastTucked): return model.canRestoreLastTucked
         default: return true
         }
+    }
+}
+
+extension AppDelegate: NSMenuDelegate {
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        let hidden = coordinator.tuckableScreenIDs.isEmpty
+        tuckAwayMenuItems.forEach { $0.isHidden = hidden }
     }
 }

@@ -11,7 +11,7 @@ the same 256 grid, the same 24-unit line, round ends.
 
 | Folder | What's in it |
 | --- | --- |
-| `svg/` | Masters. `tuck-symbol` and `tuck-symbol-small` in Tuck Blue, `-black` and `-white`, plus the symbol in each of Tuck's other colours (`-purple`, `-green`, `-orange`, `-rose`, `-teal`). `tuck-notch-holding` shows the notch's holding state (the small cut with its card) for docs; it is not a logo. `tuck-logo-horizontal`, `tuck-logo-stacked` and `tuck-wordmark` in colour, `-reversed` (for dark backgrounds), `-black` and `-white` |
+| `svg/` | Masters. `tuck-symbol` and `tuck-symbol-small` in Tuck Blue, `-black` and `-white`, plus the symbol in each of Tuck's other colours (`-purple`, `-green`, `-orange`, `-rose`, `-teal`). `tuck-notch-holding` shows the mark's holding state (the small cut with its card, as the menu-bar bubble shows it) for docs; it is not a logo. `tuck-logo-horizontal`, `tuck-logo-stacked` and `tuck-wordmark` in colour, `-reversed` (for dark backgrounds), `-black` and `-white` |
 | `png/` | Large PNGs for documents, press and social posts |
 | `web/` | Favicon (`favicon.svg`, `favicon.ico`), touch and PWA icons, `site.webmanifest`, `head.html` to paste into a page, and `tokens.css` with the site's colours and type |
 | `source/` | 1024 masters for the app icon (regular and small cut) and the web icons |
@@ -58,22 +58,21 @@ colour is possible, use `-black` or `-white`.
 
 ## At rest, pointed at, empty and holding
 
-On the closed notch the line is faint at rest and lights when you point at it, and its card says whether
-Tuck holds anything:
+The mark shows in the menu-bar bubble, on displays without a notch. The closed notch shows nothing: it is
+only the notch. In the bubble the line is faint at rest, and its card says whether Tuck holds anything:
 
 - **At rest:** the line at 32 % of its colour.
-- **Pointed at:** the line at full colour, fading on in 0.16 s as its dip greets the pointer, and back
-  to 32 % as the pointer leaves.
-- **Holding:** a short card at full colour resting in the dip, at rest or pointed at: as wide as the
-  line, 16 units clear of the floor, 12 to 14 clear of the walls (`tuck-notch-holding` shows it with the
-  line lit).
+- **Pointed at:** the Tuck button's arrow takes the line's place, and the line comes back as the pointer
+  leaves.
+- **Holding:** a short card at full colour resting in the dip: as wide as the line, 16 units clear of
+  the floor, 12 to 14 clear of the walls (`tuck-notch-holding` shows it with the line lit).
 - **Starting to hold:** a window tucked at rest flies up as a dot just above the dip. The card drops
   into the dip from above on a spring and settles, with a quick swell of the mark. A deposit into a
   Tuck that already holds something lands on the card and swells the mark.
 - **Emptying:** the card lifts out in 0.2 s.
-- **Reduce Motion:** the card cross-fades, and the greeting is skipped.
+- **Reduce Motion:** the card cross-fades.
 
-The card belongs to the notch, not the logo. Elsewhere (the app icon, the website, documents) use the
+The card belongs to the bubble, not the logo. Elsewhere (the app icon, the website, documents) use the
 line alone.
 
 ## Type

@@ -112,6 +112,15 @@ struct SwipeGestureTrackerTests {
         #expect(tracker.process(down: 25, right: 0, began: true, ended: true, stage: .tucked) == .reveal)
     }
 
+    @Test func theBareNotchOpensWithASwipeDownAndIgnoresOneUp() {
+        let tracker = SwipeGestureTracker(verticalThreshold: 20, closeThreshold: 12)
+        #expect(tracker.process(down: 25, right: 0, began: true, ended: true, stage: .bareNotch) == .expand)
+        // Up, there is nothing to tuck away, and nothing follows the fingers.
+        #expect(tracker.process(down: -15, right: 0, began: true, ended: false, stage: .bareNotch) == nil)
+        #expect(tracker.pull(stage: .bareNotch) == 0)
+        #expect(tracker.process(down: -25, right: 0, began: false, ended: true, stage: .bareNotch) == nil)
+    }
+
     @Test func swipingDownTheShallowFoldUnfoldsItAndUpFoldsItBack() {
         let tracker = SwipeGestureTracker(verticalThreshold: 20, closeThreshold: 12)
         #expect(tracker.process(down: 25, right: 0, began: true, ended: true, stage: .expanded) == .unfold)
@@ -124,6 +133,7 @@ struct SwipeGestureTrackerTests {
         let steps: [(SwipeGestureTracker.Stage, down: SwipeGestureTracker.Action?, up: SwipeGestureTracker.Action?)] = [
             (.tucked, .reveal, nil),
             (.collapsed, .expand, .tuckAway),
+            (.bareNotch, .expand, nil),
             (.expanded, .unfold, .collapse),
             (.full, nil, .fold),
         ]

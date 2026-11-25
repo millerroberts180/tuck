@@ -57,9 +57,10 @@ struct ScreenAnchor: Equatable {
 
 /// Sizes for the collapsed and expanded surface, shared by the AppKit view and its window controller.
 ///
-/// On a notched display the collapsed surface is the notch's own height, with one wing either side that
-/// is a square of that height plus a little room, so it sits snugly around the camera housing and keeps
-/// the same proportions on every notched Mac. Tucked away, it shrinks to exactly the hardware notch.
+/// On a notched display the closed surface is exactly the notch, hardware or drawn, with nothing on it. A
+/// drag pops a band out below it with a wing's room either side, a square of the notch's height plus a
+/// little, so it sits snugly around the camera housing and keeps the same proportions on every notched
+/// Mac.
 struct SurfaceMetrics {
     /// The least room the fold's top line keeps either side of the notch (or the bubble's mark): the Tuck
     /// button on one side, the lenses on the other.
@@ -74,19 +75,15 @@ struct SurfaceMetrics {
     /// a fraction of a point lower than the safe-area inset says at scaled resolutions, which would
     /// otherwise show as a thin line of notch under the surface.
     static let notchOverlap: CGFloat = 2
-    /// Tuck's mark, on the left wing while Tuck holds something, as the system's own notch pills show
-    /// one status there; alone in the middle of a bubble, always.
+    /// Tuck's mark, alone in the middle of a bubble.
     static let markSize: CGFloat = 20
-    /// The Tuck button that appears on the right wing while the pointer is over the surface, or in a
-    /// bubble in the mark's place.
+    /// The Tuck button that takes a bubble's mark's place while the pointer is over it.
     static let tuckButtonSize: CGFloat = 20
-    /// The quiet dot the right wing shows at rest, which gives way to the Tuck button. A bubble has none.
-    static let restingDotSize: CGFloat = 6
     /// Each end of a bubble, either side of the Tuck button's target: a click there opens the fold.
     static let bubbleEndWidth: CGFloat = 20
 
     let anchor: ScreenAnchor
-    /// Swiped away: the surface shrinks to the hardware notch (or a small spot on other displays).
+    /// Only the notch, or a bubble's spot: at rest around a notch, or swiped away.
     var isTuckedAway = false
     /// How many cards the fold shows in a row, and how big, from Settings › Notch.
     var cards = CardLayout.standard
@@ -97,8 +94,8 @@ struct SurfaceMetrics {
         isNotch ? anchor.notchSize.height + Self.notchOverlap : min(max(anchor.menuBarHeight - 6, 20), 28)
     }
 
-    /// The mark and the Tuck button as drawn: full size in a notch's wings, and inside a bubble's height
-    /// with room above and below, since on most external displays the bubble is only 20 pt tall.
+    /// The mark and the Tuck button as drawn, inside a bubble's height with room above and below, since on
+    /// most external displays the bubble is only 20 pt tall.
     var markSide: CGFloat { isNotch ? Self.markSize : min(Self.markSize, height - 4) }
     var tuckButtonSide: CGFloat { isNotch ? Self.tuckButtonSize : min(Self.tuckButtonSize, height - 6) }
 
@@ -107,12 +104,12 @@ struct SurfaceMetrics {
         isNotch ? 0 : max(((anchor.menuBarHeight - height) / 2).rounded(), 2)
     }
 
-    /// Width of each side wing next to a hardware notch.
+    /// Width of the room the drop band takes either side of a notch.
     var wingWidth: CGFloat { anchor.notchSize.height + 4 }
 
-    /// The collapsed surface with its mark and its dot (or, while pointed at, its Tuck button) showing. A
-    /// bubble holds one symbol, the mark or the Tuck button in its place: it is the button's target (the
-    /// button and 6 pt either side) with an end either side of that.
+    /// A bubble at rest, holding one symbol, the mark or the Tuck button in its place: the button's target
+    /// (the button and 6 pt either side) with an end either side of that. Around a notch, the notch with a
+    /// wing either side, which the drop band pops out from.
     var restingSize: CGSize {
         if isNotch {
             return CGSize(width: anchor.notchSize.width + wingWidth * 2 + Self.shoulder * 2, height: height)
@@ -121,7 +118,7 @@ struct SurfaceMetrics {
         return CGSize(width: max(target + Self.bubbleEndWidth * 2, height * 1.9), height: height)
     }
 
-    /// The collapsed surface swiped away: the hardware notch itself, or a bubble-high spot.
+    /// The closed notch, hardware or drawn, or a bubble swiped away to a bubble-high spot.
     var tuckedSize: CGSize {
         isNotch
             ? CGSize(width: anchor.notchSize.width + Self.shoulder * 2, height: height)
@@ -130,11 +127,13 @@ struct SurfaceMetrics {
 
     var collapsedSize: CGSize { isTuckedAway ? tuckedSize : restingSize }
 
-    /// The window around the closed surface, before any room for the drop invitation: the resting
-    /// surface with a little margin, even while it is tucked away, so tucking, revealing and a swipe that
-    /// pulls the surface never resize it mid-animation. It is also where the pointer counts as over it.
+    /// The window around the closed surface, before any room for the drop invitation, with a little
+    /// margin; it is also where the pointer counts as over it. Around a notch it is the notch's, so
+    /// pointing at the menu bar beside it doesn't count. A bubble's is its resting size even while it is
+    /// tucked away, so tucking, revealing and a swipe that pulls it never resize it mid-animation.
     var collapsedWindowSize: CGSize {
-        CGSize(width: restingSize.width + 24, height: topInset + restingSize.height + 10)
+        let size = isNotch ? tuckedSize : restingSize
+        return CGSize(width: size.width + 24, height: topInset + size.height + 10)
     }
 
     /// The open fold on this display: a row of its cards wide, but never narrower than its top line needs

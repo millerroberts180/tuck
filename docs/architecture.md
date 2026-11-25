@@ -153,71 +153,63 @@ surfaces only when the displays or style change.
 auxiliary top-left/top-right areas: the notch width is the gap between them. Notched displays get a
 black surface that continues the hardware notch: the notch's height plus 2 pt (the physical notch can
 end a fraction of a point below the reported inset, which would show as a thin line under the surface),
-quarter-circle shoulders where it meets the top edge, and one wing either side (the notch height plus 4
-pt): Tuck's mark on the left and a small dot on the right, shown only while Tuck holds a window or an
-item. It is centred on the notch itself, which can sit half a point off the screen's centre, and the
-mark and the dot are each centred in their wing, between the shape's side and the notch. Empty (copies
-alone included), or tucked away, it shrinks to the notch itself and draws nothing. Other displays get a
-soft bubble centred in the menu-bar strip, 72 pt wide, holding the mark alone, or, with Settings → Notch
-→ Displays without a notch set to Notch, a drawn notch 180 pt wide and as tall as the menu bar
-(`isSimulated`): the same black surface, but with nothing behind it, so an empty or tucked one leaves
-only a near-invisible spot to point at or click. Only the displays chosen in Settings get a surface
+with quarter-circle shoulders where it meets the top edge. Closed, it is exactly the notch and draws
+nothing, whatever Tuck holds, so the hardware notch is all that shows. It is centred on the notch
+itself, which can sit half a point off the screen's centre. A drag pops a band out below it with a
+wing's room either side (`wingWidth`, the notch height plus 4 pt). Other displays get a soft bubble
+centred in the menu-bar strip, 72 pt wide, holding the mark alone, or, with Settings → Notch → Displays
+without a notch set to Notch, a drawn notch 180 pt wide and as tall as the menu bar (`isSimulated`):
+the same black surface, drawn at rest since nothing is behind it (`drawsNotch`), so only a tucked one
+leaves a near-invisible spot to point at or click. Only the displays chosen in Settings get a surface
 (`SurfaceDisplays`); if none matches, the menu-bar display does. `SurfaceMetrics` holds the sizes both
 the view and its controller use, the open fold's width among them (`fold`, from the card setting and the
-display; see "The fold"); the window is always sized for the resting surface, so tucking and swipes
-never resize it mid-animation.
+display; see "The fold"). The closed window is the resting surface with a little margin, which is also
+where the pointer counts as over it: around a notch the notch's own, so pointing at the menu bar beside
+it doesn't count; a bubble's even while it is tucked away, so tucking and swipes never resize it
+mid-animation.
 
 ### Collapsed surface (AppKit + Core Animation)
 
 `SurfaceView` draws the collapsed state as quietly as the hardware allows. A `CAShapeLayer` is the
 surface, always black, notch or bubble, so it continues the hardware notch; everything drawn on it
-resolves in the dark appearance whatever the Light or Dark setting (`Theme.notchAppearance`). On a
-notched display an empty Tuck is the bare notch, with no wings and nothing drawn; copies alone leave it
-bare too, since the mark follows `TuckLibrary.totalItemCount` (windows and held items). While Tuck holds
-something the left wing shows Tuck's mark (20 pt; centred in a bubble and 4 pt shorter than it), a
-`markLayer` holding three layers: the logo's line, the screen's top edge dipping round the notch, faint
-(`markBaseLayer`, the label colour at `TuckLogo.restingOpacity`, 0.32); the same line in Tuck blue
-(`markLitLayer`), shown only while the pointer is over the closed surface; and a short card in the dip
-stroked in Tuck blue (`markCardLayer`), there while Tuck holds something, as the Dock's Trash shows
-empty or full. The right wing shows a 6 pt dot in the tertiary label colour (`restingDotLayer`). There
-is no count. A bubble shows only the mark, centred, faint while Tuck is empty and with the card while it
-holds something; it has no dot. Every piece is a `CAShapeLayer` or plain `CALayer` stroked from
-`TuckLogo`'s paths, so nothing is drawn into images, and they change only when the library or the
-pointer does.
+resolves in the dark appearance whatever the Light or Dark setting (`Theme.notchAppearance`). Closed, a
+notch rests in the notch (`restsInNotch`): the bare notch, with no mark and no count, whatever Tuck
+holds. A bubble shows Tuck's mark, centred and 4 pt shorter than the bubble, a `markLayer` holding two
+layers: the logo's line, the screen's top edge dipping round the notch, faint (`markBaseLayer`, the
+label colour at `TuckLogo.restingOpacity`, 0.32), and a short card in the dip stroked in Tuck blue
+(`markCardLayer`), there while Tuck holds a window or an item (`TuckLibrary.totalItemCount`, so copies
+alone don't count), as the Dock's Trash shows empty or full. There is no count. Every piece is a
+`CAShapeLayer` or plain `CALayer` stroked from `TuckLogo`'s paths, so nothing is drawn into images, and
+they change only when the library or the pointer does.
 
-The card follows the library (`followHolds`): it lifts out at once as Tuck empties (0.2 s), but drops in
+A bubble's card follows the library (`followHolds`): it lifts out at once as Tuck empties (0.2 s), but drops in
 only once what was deposited has landed (`landDeposit`), or shortly if nothing is on its way, so it never
 drops under a window's card that is still flying. It drops from above on a spring (stiffness 385,
 damping 28) with a 1.16× swell of the mark over 0.2 s; under Reduce Motion it fades in or out over
 0.2 s.
 
 Pointing never opens the fold; a click or a swipe down does. Hover gently grows the shape (8 pt wider, 2
-pt taller on a notch) and lights the line. As the pointer arrives the mark greets it once (`greetMark`):
-the line's dip reaches down, as the fold would drop from it, springs back a little past rest and settles
-in 0.5 s, with the card riding it 0.035 s behind. It is a keyframed path on the line's layers, left to
-finish rather than restarted, and skipped while the surface rests in the notch, while a closing fold is
-still folding away and under Reduce Motion, where the line only lights. While pointed at, the dot gives
-way to the Tuck button (`tuckArrowLayer`, an arrow up into the notch stroked in the logo's line and Tuck
-blue): the dot shrinks to 0.4 and fades as the arrow grows from 0.6 and rises into its place; under
-Reduce Motion they only fade. A bubble has one symbol, so there the mark gives way instead: it fades and
-shrinks to 0.7 about its own centre as the arrow rises in its place, nothing moving sideways, and the
-mark doesn't greet while it does. The button's target is the arrow and 6 pt round it; the bubble's 20 pt
-ends (`bubbleEndWidth`) still open the fold. The button shows while the mark does and the pointer is
-over the closed surface, with no prompt up. A press on the button presses it in (0.86, 0.12 s); letting
-go over it calls `TuckModel.tuckFrontWindow()`, the Tuck Front Window shortcut's path, without opening
-the fold; it tucks the focused window, not every window of its app. Pointing at a
-notch whose stream is empty opens nothing either: the surface pops out as it does for a drag and says
-"Drop into Tuck" (`isShowingCue`). A bubble offers the arrow even then. The glyph beside those words is
-drawn into an image once per symbol, size, colour and appearance and kept (`SurfaceView.glyphs`), since
-the closed content is recoloured at every model change; the cache is cleared when the appearance
-changes.
+pt taller on a notch); around a hardware notch that is the one time the closed shape is drawn, a slight
+swell of the notch. A notch has nothing else to show. In a bubble the mark gives way to the Tuck button
+(`tuckArrowLayer`, an arrow up stroked in the logo's line and Tuck blue): the mark fades and shrinks to
+0.7 about its own centre as the arrow grows from 0.6 and rises in its place, nothing moving sideways;
+under Reduce Motion they only fade. The button's target is the arrow and 6 pt round it; the bubble's 20
+pt ends (`bubbleEndWidth`) still open the fold. The button shows while the pointer is over the closed
+bubble, with no prompt up. A press on the button presses it in (0.86, 0.12 s); letting go over it calls
+`TuckModel.tuckFrontWindow()`, the Tuck Front Window shortcut's path, without opening the fold; it tucks
+the focused window, not every window of its app. The drop target's glyph is drawn into an image once
+per symbol, size, colour and appearance and kept (`SurfaceView.glyphs`), since the closed content is
+recoloured at every model change; the cache is cleared when the appearance changes.
 
-What is deposited lands in the mark (`landDeposit`): an empty mark takes its card, otherwise the mark
-swells once (1.12× over 0.24 s). A drop on the closed surface first draws the drop words and glyph into
-the mark, shrinking, as the band folds back (`compressIntoMark`); under Reduce Motion they fade with the
+What is deposited lands in a bubble's mark (`landDeposit`): an empty mark takes its card, otherwise the
+mark swells once (1.12× over 0.24 s). A drop on the closed surface first draws the drop words and glyph
+into the mark's place, shrinking, as the band folds back (`compressIntoMark`): a bubble's mark, or the
+middle of the notch, where the band stays drawn until it is home; under Reduce Motion they fade with the
 band and nothing swells. When an action did nothing while the fold is closed (a keyboard shortcut, say)
-the mark, the dot and the arrow give a small sideways shake (0.36 s; not while tucked away or under
-Reduce Motion); with the fold open, its status line says why instead.
+a bubble's mark and arrow give a small sideways shake (0.36 s; not while tucked away or under Reduce
+Motion). A notch has nothing on it to shake, so its shape shakes, drawn for the 0.36 s it moves, and
+shows as black edges either side of the hardware notch. With the fold open, its status line says why
+instead.
 
 AppKit replaces the window's tracking area when the window resizes without sending an exit, so closing
 the fold and each resize re-read where the pointer is (`pointerMayHaveMoved`): the closed surface goes
@@ -226,13 +218,16 @@ back to its resting form unless the pointer is still over it.
 The view also:
 
 - handles clicks (toggle) and two-finger swipes (`SwipeGestureTracker` from TuckCore). Vertical swipes
-  step through four stages, tucked, collapsed, the shallow fold and the full fold, one step per gesture:
-  down goes one deeper, up one back. An empty notch counts as collapsed, so a swipe down opens it as
-  from the wings. Sideways does nothing, except over the shallow fold's strip, which it scrolls
-  (see "The fold"). While a swipe is in progress on the closed surface the
-  tracker's `pull` (−1…1) drives the shape directly, without animation: down stretches it towards the
-  fold or slides the wings out of the notch, up draws the wings in and fades the content. Lifting short
-  of the threshold springs it back; crossing it commits. Swipes play no haptic.
+  step through the stages one step per gesture: down goes one deeper, up one back. A bubble or drawn
+  notch goes tucked, collapsed, the shallow fold and the full fold. A closed hardware notch is its own
+  stage (`bareNotch`): down opens the shallow fold and up does nothing, since there is nothing on it to
+  tuck away. Sideways does nothing, except over the shallow fold's strip, which it scrolls (see "The
+  fold"). While a swipe is in progress on the closed surface the tracker's `pull` (−1…1) drives the
+  shape directly, without animation: down stretches it towards the fold, or a tucked bubble back out of
+  its spot; up draws a bubble in and fades its mark, or draws a drawn notch up. Lifting short of the
+  threshold springs it back; crossing it commits. Swipes play no haptic. The menu-bar item's Tuck Away
+  and Bring Tuck Back act on bubbles and drawn notches only (`tuckableScreenIDs`), and are hidden when
+  there are none.
 - is the drag destination for files, URLs and text (`DropReader`): over the drop target while closed,
   and anywhere over the open fold.
 
@@ -405,8 +400,8 @@ went to), and the whole SwiftUI tree, still observing the model, stayed with it.
 closed surface, once the outline is at rest and no open is being prepared, also releases any hosting
 view still in the surface; so does an open called off while its panel was being built. The panel is
 recorded before it joins the view tree, so nothing that the insertion sets off can add a second one
-that is never taken out. The shadow goes as it closes, and the mark and dot, put back in the wings
-while hidden, return once it is nearly home. The fold reports its ideal height through a
+that is never taken out. The shadow goes as it closes, and a bubble's mark, put back in place while
+hidden, returns once it is nearly home. The fold reports its ideal height through a
 preference so the window and shape fit the content exactly; the full list scrolls past its maximum
 height (`min(440, max(180, screen height − menu bar − 280))` pt, through `PanelListLayout`), so it stays
 a compact list rather than a drawer down the screen. Window tiles, and the title rows of an open app,
@@ -459,7 +454,7 @@ without knowing. On the card and its hover, in all four appearances, primary tex
 secondary text 4.60:1, code's keywords and strings 4.60:1, a kind's mark 3.31:1 (5.17:1 with Increase
 Contrast), and the ring and the capsule 3.31:1 off the ground. There is one accent, Tuck blue (`accent`: the
   logo's #7299C5 in dark, 7:1 on black, and #9CBEE3 with Increase Contrast), with `accentTint` for the
-  active drop target and a selection. It marks the mark's light and card, the Tuck button's arrow,
+  active drop target and a selection. It marks the mark's card, the Tuck button's arrow,
   keyboard focus (on a card, the tile with the keyboard's ring), the kind chip that is on, the active
   drop target, a selected or expanded control, the deposit and restore cue
   and the click feedback capsule; apps and clipboard formats have no colour of their own. People's
@@ -740,7 +735,7 @@ arriving windows is drawn empty, keeping its place, until `arrived` is called fo
 every card is in, `landed` says whether any landed outside a tile or row, and only then does
 the model confirm the deposit (`confirmDeposit`; straight away if nothing is set up to fly): a surface
 that was swiped away comes back first, the deposit haptic plays, and `plusOne` tells the closed surface
-to swell the mark once, or, if it was empty, to drop its card in. A card that lands in a tile or row is
+to swell a bubble's mark once, or, if it was empty, to drop its card in. A card that lands in a tile or row is
 its own confirmation.
 `OverlayCoordinator` waits one run-loop turn, so the open fold has laid out the tiles the windows have
 just taken, and picks the display the window was on (`depositTarget(for:frame:)`);
@@ -749,8 +744,8 @@ and the window's tile in view, that is the tile: tiles and the title rows of an 
 frames (`WindowRowFramesKey`; a window in a closed app tile has the tile's). The card lands on the
 icon as a dot in Tuck blue as wide as the icon (`WindowsFace.iconSide`, 30 pt, on a tile;
 `StreamIcon.size` on a title row), and the frame, its 10 pt corners (`RowChrome.cornerRadius`, as a
-tile's) and the blue at a tenth come with it. Otherwise, on a closed surface that shows the mark, it lands in the mark's dip as a dot the
-line's width; else in the middle of the surface with no dot.
+tile's) and the blue at a tenth come with it. Otherwise, on a closed bubble, it lands in the mark's dip
+as a dot the line's width; on a notch, or a tucked bubble, in the middle of the surface with no dot.
 
 `DepositAnimator` shows each flight in a borderless, click-through panel on whole points, one level
 above Tuck's surface when it lands on a dot or a tile (so the landing is seen, even over the open fold)
@@ -815,7 +810,7 @@ For each drag event of a supported drag it then measures the pointer against the
 - **Invitation.** A top-centre range around the collapsed surface (260 pt to each side, 220 pt down)
   invites the drop. Inside it the level runs from 0 at the edge to 7 near the surface, and 8 (accepted)
   over the drop target, which is the surface as it pops out. `SurfaceView` pops the shape out by a
-  band under the notch (or widens the bubble) saying what the drag carries ("Drop file into Tuck",
+  band under the bare notch (or widens the bubble) saying what the drag carries ("Drop file into Tuck",
   "Drop link into Tuck" or "Drop text into Tuck", from `DropKind`) beside its glyph, which move on the
   outline's own spring so they ride the band out, bounce with it and go back in with it; then grows it
   slightly and strengthens a rim in Tuck blue, which firms up over the target. Leaving the range needs
@@ -1164,7 +1159,7 @@ they are set again after the change. Uninstall removes both domains.
 ### Accessibility withdrawn
 
 The accessibility observer (a distributed notification, no polling) calls
-`TuckModel.accessibilityChanged`. Turned off while windows are tucked, the mark and dot shake and the
+`TuckModel.accessibilityChanged`. Turned off while windows are tucked, the closed surface shakes and the
 status line asks for it again; the fold then shows "N tucked windows can't come back" with Open
 Settings… at its foot, until it is allowed. Windows tucked by minimising wait in the Dock
 meanwhile; ones parked off screen stay there, since only Accessibility can move another app's windows.
