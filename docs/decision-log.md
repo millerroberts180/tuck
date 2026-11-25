@@ -46,10 +46,20 @@ written for Tuck.
   - `swift build` shows no warnings.
   - `--snapshot-panel`: the notch empty, holding and pointed at, the drop band near and over for a
     file, a link and text, the drawn notch empty and holding, and the bubble at rest, pointed at and
-    holding, each in Light, Dark and Increase Contrast. Nothing on the closed notch, and the bubble
-    matches main's shots.
-- **Not checked:** a hardware notch on a real MacBook. The test Mac has none, so the notch's own
-  behaviour there was seen only through the drawn notch and the snapshots.
+    holding, each in Light, Dark and Increase Contrast. Nothing shows on the closed notch. The 48 bubble
+    shots and the 340 others (the fold, Settings, setup) match main's pixel for pixel.
+  - On the test Mac's drawn notch, holding files: bare at rest, swelling when pointed at, and a click
+    opens the fold; a mouse wheel does nothing, as before. A file dragged from Finder pops the band out
+    with its symbol and words and nothing else, and dropped on the notch it is added. The menu's Tuck
+    Away and Bring Tuck Back work, and pointing at the tucked notch's place shows it again. Tuck Front
+    Window without Accessibility shakes the notch's shape. Switched to the bubble, the mark rests in it,
+    the arrow takes its place when pointed at, and either end opens the fold.
+- **Not checked:**
+  - A hardware notch on a real MacBook. The test Mac has none, so the notch's own behaviour there was
+    seen only through the drawn notch and the snapshots.
+  - A two-finger swipe. The test Mac sends only mouse-wheel events, so the swipe stages rest on the
+    tests.
+  - Tucking a window, since the test Mac hasn't given this build Accessibility.
 
 ## 2026-11-19: Setup is three steps, done on the real Tuck
 
